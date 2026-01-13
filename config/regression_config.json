@@ -1,0 +1,63 @@
+{
+  "input": {
+    "csv_directory": "plots",
+    "mode": "all",
+    "active_files": []
+  },
+  "features": {
+    "target": "delivery_prob",
+    "selection_mode": "manual",
+    "predictors": [],
+    "exclude": [
+      "seed",
+      "run_id"
+    ],
+    "normalize": true,
+    "polynomial_features": {
+      "enabled": true,
+      "degree": 2,
+      "interaction_only": true,
+      "include_bias": false
+    }
+  },
+  "model_settings": {
+    "split_settings": {
+      "train_size": 0.75,
+      "random_state": 5
+    },
+    "cross_validation": {
+      "enabled": true,
+      "folds": 5
+    },
+    "enabled_models": {
+      "Linear Regression": true,
+      "Ridge Regression": false,
+      "Lasso Regression": false,
+      "Decision Tree": true,
+      "Random Forest": true,
+      "Gradient Boosting": true,
+      "KNN": true
+    },
+    "parameters": {
+      "KNN": {
+        "n_neighbors": 6
+      },
+      "Decision Tree": {
+        "max_depth": null,
+        "min_samples_split": 2
+      },
+      "Random Forest": {
+        "n_estimators": 100,
+        "max_depth": null
+      },
+      "Gradient Boosting": {
+        "n_estimators": 100,
+        "learning_rate": 0.1,
+        "max_depth": 3
+      }
+    }
+  },
+  "output": {
+    "directory": "regression_results"
+  }
+}

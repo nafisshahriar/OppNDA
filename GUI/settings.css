@@ -1,0 +1,748 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', 'Roboto', sans-serif;
+}
+
+/* Body */
+body {
+    background: linear-gradient(to bottom right, #f9fafc, #eef2f7);
+    color: #334155;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: row;
+}
+
+/* Sidebar Navigation */
+#tabs {
+    width: 19vw;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    border-right: 1px solid #cbd5e1;
+    position: fixed;
+    height: 100%;
+    overflow-y: auto;
+    z-index: 1000;
+    transition: transform 0.3s ease-in-out;
+}
+
+#tabs.hidden {
+    transform: translateX(-100%);
+}
+
+.sidebar-logo img {
+    height: 70%;
+    margin-bottom: 1rem;
+    margin-top: 1rem;
+
+}
+
+fieldset {
+    border: 2px solid #1f1f1f;
+    /* Green border */
+    border-radius: 8px;
+    /* Rounded corners */
+    padding: 1rem;
+    /* Inner spacing */
+    margin-bottom: 1.5rem;
+    /* Space between fieldsets */
+    background-color: #f9f9f9;
+    /* Light background color */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* Subtle shadow */
+}
+
+legend {
+    font-size: 1.2rem;
+    /* Slightly larger font size */
+    font-weight: bold;
+    /* Bold text */
+    color: #1f1f1f;
+    /* Green text color */
+    padding: 0 0.5rem;
+    /* Padding around the text */
+}
+
+/* Tab Buttons */
+#tabs button {
+    width: 90%;
+    background: transparent;
+    border: none;
+    color: #475569;
+    padding: 12px 20px;
+    font-size: 15px;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    border-radius: 6px;
+    margin: 0.1rem;
+}
+
+#tabs button:hover,
+#tabs button.active {
+    margin: 0.1rem;
+    background-color: #cfcfcf;
+    color: rgb(7, 7, 7);
+}
+
+
+.tabcontent {
+    width: calc(100% - 21vw);
+    /* Adjust width based on sidebar */
+    margin-left: 20vw;
+    margin-top: 1vw;
+    margin-bottom: 1vw;
+    padding: 1.25vw;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    display: none;
+}
+
+.split-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.wkt-form-container {
+    background: #d3d8de;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.2rem;
+}
+
+@media (max-width: 1024px) {
+    .split-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.tabcontent.active {
+    display: block;
+}
+
+/* Adjust for hidden sidebar */
+.tabcontent.full-width {
+    margin-left: 0;
+}
+
+
+/* Form Styling */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+form label {
+    font-weight: 600;
+
+    color: #475569;
+}
+
+form input[type="text"],
+form input[type="number"],
+form select,
+form input[type="file"],
+
+form button {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #f8fafc;
+    font-size: 15px;
+    transition: border-color 0.3s;
+
+}
+
+
+form input:focus,
+form select:focus {
+    border-color: #a0a0a0;
+    outline: none;
+}
+
+/* Checkbox Align */
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+input[type="checkbox"] {
+    transform: scale(1.3);
+    cursor: pointer;
+    margin-left: 1%;
+}
+
+.scenario-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.form-hint {
+    color: #64748b;
+    font-size: 13px;
+    margin: 10px 0 15px 0;
+}
+
+form input[type="range"] {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 50%;
+}
+
+input[type="range"] {
+    accent-color: #3b82f6;
+    /* Blue nice color */
+}
+
+h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 20px;
+}
+
+.interface-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.full-width-button {
+    width: 100%;
+    padding: 10px;
+    background-color: #219ba3;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 1%;
+}
+
+.full-width-button:hover {
+    background-color: #117f86;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    margin-top: 20px;
+}
+
+table th,
+table td {
+    border: 1px solid #e2e8f0;
+    padding: 12px;
+    text-align: center;
+    font-size: 14px;
+    word-wrap: break-word;
+    /* Prevent long text from breaking layout */
+}
+
+table th {
+    background: #f1f5f9;
+}
+
+/* Style for file input */
+input[type="file"] {
+    display: block;
+    width: 100%;
+    /* Full width */
+    max-width: 300px;
+    /* Optional: Limit the width */
+    padding: 10px;
+    font-size: 14px;
+    color: #555;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: border-color 0.3s, background-color 0.3s;
+}
+
+input[type="file"]:hover {
+    border-color: #888;
+    background-color: #f1f1f1;
+}
+
+input[type="file"]:focus {
+    outline: none;
+    border-color: #3b82f6;
+    /* Blue border on focus */
+    background-color: #fff;
+}
+
+/* Table Buttons */
+.edit-button {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    margin: 0 2px;
+    transition: background 0.3s;
+}
+
+.add-button {
+    background: #459b0b;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    margin: 0 2px;
+    transition: background 0.3s;
+}
+
+.remove-button {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    margin: 0 2px;
+    transition: background 0.3s;
+}
+
+.edit-button:hover {
+    background: #2563eb;
+}
+
+.add-button:hover {
+    background: #169105;
+}
+
+
+.remove-button:hover {
+    background: #dc2626;
+}
+
+.members-page {
+    margin-left: auto;
+    padding: 20px 20px;
+    max-width: 1200px;
+    margin-right: auto;
+    text-align: center;
+}
+
+.section-title {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #0f172a;
+}
+
+.subsection-title {
+
+    font-weight: 600;
+    margin: 20px 0 20px;
+    color: #1e293b;
+}
+
+.member-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 40px;
+}
+
+.member-card {
+    max-width: 200px;
+    text-align: center;
+}
+
+.member-card img {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 2px solid rgrgb(128, 125, 125);
+    object-fit: cover;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    /* Add subtle shadow */
+}
+
+.member-name {
+    font-weight: 600;
+    font-size: 16px;
+    color: #2c50b1;
+}
+
+.member-role {
+    font-size: 14px;
+    color: #64748b;
+}
+
+.member-links a {
+    margin: 0 4px;
+    color: #219ba3;
+    font-size: 1.1rem;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.member-links a:hover {
+    color: #117f86;
+    transition: color 0.3s;
+}
+
+/* Sidebar logo button */
+.group-logo-button {
+    display: flex;
+    /* Use flexbox to align items */
+    align-items: center;
+    /* Vertically align the text with the image */
+    justify-content: center;
+    /* Center the content horizontally */
+    gap: 1rem;
+    /* Add spacing between the image and the text */
+    margin-top: auto;
+    padding: 20px;
+    text-align: center;
+
+}
+
+.group-logo-button img {
+    width: 30%;
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+.group-logo-button h4 {
+    /*font-size: 1.2rem; Adjust font size */
+    font-weight: 600;
+    /* Make the text bold */
+    color: #0f172a;
+    /* Match the color with the theme */
+    margin: 0;
+    /* Remove default margin */
+}
+
+.group-logo-button img:hover {
+    opacity: 0.8;
+}
+
+
+/* Hover Container */
+.hover-container {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+
+/* Tooltip Styling */
+.hover-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    bottom: 120%;
+    /* Default position above the element */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #1f2937;
+    /* Dark background */
+    color: #ffffff;
+    /* White text */
+    text-align: center;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* Subtle shadow */
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 1000;
+    display: inline-block;
+    /* Adjust width to fit content */
+    max-width: calc(100vw - 20px);
+    /* Prevent overflow on small screens */
+    word-wrap: break-word;
+    /* Wrap long text */
+    white-space: nowrap;
+    /* Prevent wrapping unless it exceeds max-width */
+    overflow: hidden;
+    /* Hide overflowing text */
+    text-overflow: ellipsis;
+    /* Add ellipsis for overflowing text */
+}
+
+/* Tooltip Arrow */
+.hover-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    /* Arrow at the bottom of the tooltip */
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 8px;
+    border-style: solid;
+    border-color: #1f2937 transparent transparent transparent;
+    /* Arrow color matches tooltip */
+}
+
+
+/* Show Tooltip on Hover */
+.hover-container:hover .hover-tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Simple Tooltip using data-tooltip attribute */
+label[data-tooltip] {
+    position: relative;
+    cursor: help;
+}
+
+label[data-tooltip]::after {
+    content: "?";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    margin-left: 5px;
+    background: #3b82f6;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    border-radius: 50%;
+    vertical-align: middle;
+}
+
+label[data-tooltip]:hover::after {
+    background: #2563eb;
+}
+
+label[data-tooltip]:hover::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    background-color: #1f2937;
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: normal;
+    white-space: normal;
+    width: max-content;
+    max-width: 300px;
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: 5px;
+}
+
+
+@media (max-width: 768px) {
+    #tabs {
+        transform: translateX(-100%);
+    }
+
+    .hover-tooltip {
+        bottom: auto;
+        /* Reset bottom positioning */
+        top: 120%;
+        /* Position below the element */
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 12px;
+        /* Reduce font size for smaller screens */
+        padding: 8px 12px;
+        /* Adjust padding */
+    }
+
+    .hover-tooltip::after {
+        top: -8px;
+        /* Adjust arrow position */
+        bottom: 100%;
+        /* Arrow points upwards */
+        border-color: transparent transparent #1f2937 transparent;
+        /* Arrow color matches tooltip */
+    }
+
+    .tabcontent {
+        margin-left: 0;
+    }
+
+    .members-page {
+        margin-left: 0;
+        padding: 20px;
+    }
+}
+
+/* Clickable Folder Input */
+.folder-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: border-color 0.3s, background-color 0.3s, box-shadow 0.3s;
+}
+
+.folder-input-wrapper:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.folder-icon {
+    color: #3b82f6;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.folder-input {
+    flex: 1;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    font-size: 14px;
+    color: #475569;
+}
+
+.folder-input::placeholder {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* Advanced Settings Collapsible */
+.advanced-settings {
+    margin-top: 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.advanced-settings summary {
+    padding: 12px 15px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.3s;
+    border-radius: 8px;
+}
+
+.advanced-settings summary:hover {
+    background: #e2e8f0;
+}
+
+.advanced-settings summary i {
+    color: #3b82f6;
+}
+
+.advanced-settings[open] summary {
+    border-bottom: 1px solid #e2e8f0;
+    border-radius: 8px 8px 0 0;
+}
+
+.advanced-content {
+    padding: 15px;
+}
+
+.advanced-content h4 {
+    color: #1e293b;
+    font-size: 14px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 8px;
+}
+
+/* Dynamic Tables for Advanced Settings */
+.dynamic-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.dynamic-table th,
+.dynamic-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.dynamic-table th {
+    background: #f1f5f9;
+    font-weight: 600;
+    color: #475569;
+    font-size: 13px;
+}
+
+.dynamic-table td input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.dynamic-table td input:focus {
+    border-color: #3b82f6;
+    outline: none;
+}
+
+.dynamic-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.dynamic-table tbody tr:hover {
+    background: #f8fafc;
+}

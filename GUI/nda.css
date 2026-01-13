@@ -1,0 +1,180 @@
+/* NDA Analysis Results Styling */
+
+body {
+    background: linear-gradient(to bottom right, #f9fafc, #eef2f7);
+    color: #334155;
+    font-family: 'Inter', 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.nda-container {
+    max-width: 90vw;
+    margin: 40px auto;
+    padding: 24px;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+}
+
+h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 32px;
+    text-align: center;
+}
+
+.plot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 32px;
+}
+
+.plot-card {
+    background: #f8fafc;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    padding: 18px 18px 12px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: box-shadow 0.2s;
+    margin-bottom: 18px;
+}
+
+.plot-card:hover {
+    box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+}
+
+.plot-img {
+    max-width: 100%;
+    max-height: 340px;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    margin-bottom: 10px;
+    transition: transform 0.2s;
+    cursor: zoom-in;
+}
+
+/* Modal for zoom */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(30,41,59,0.85);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    max-width: 98vw;
+    max-height: 98vh;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    background: #fff;
+    padding: 16px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+}
+
+.modal-content img {
+    max-width: 80vw;
+    max-height: 80vh;
+    border-radius: 8px;
+    display: block;
+    margin: 0 auto;
+    transition: transform 0.12s cubic-bezier(.4,2,.6,1), box-shadow 0.2s;
+    cursor: zoom-in;
+    position: relative;
+}
+
+.modal-content img.enlarged {
+    transform: scale(1.8);
+    cursor: grab;
+    box-shadow: 0 0 0 4px #219ba3;
+}
+
+.close-modal {
+    position: absolute;
+    top: 8px;
+    right: 16px;
+    font-size: 2rem;
+    color: #334155;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 2;
+    margin: 0 8px;
+}
+
+.modal-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #219ba3;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    font-size: 2.2rem;
+    cursor: pointer;
+    z-index: 2;
+    opacity: 0.92;
+    transition: background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(33,155,163,0.10);
+    margin: 0 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-nav-btn:hover {
+    background: #117f86;
+    box-shadow: 0 4px 16px rgba(33,155,163,0.18);
+}
+
+.modal-prev {
+    left: 10px;
+}
+
+.modal-next {
+    right: 10px;
+}
+
+.arrow {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+}
+
+.arrow svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+@media (max-width: 600px) {
+    .nda-container {
+        padding: 4vw;
+    }
+    .plot-grid {
+        gap: 16px;
+    }
+    .plot-card {
+        padding: 8px 4px 8px 4px;
+    }
+    .modal-content img {
+        max-width: 98vw;
+        max-height: 60vh;
+    }
+}

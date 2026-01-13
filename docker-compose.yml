@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  oppnda:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: oppnda
+    ports:
+      - "5001:5001"
+    volumes:
+      # Mount config directory for persistent configuration
+      - ./config:/app/config
+      # Mount reports directory for input data
+      - ./reports:/app/reports:ro
+      # Mount output directories
+      - ./plots:/app/plots
+      - ./regression_results:/app/regression_results
+    environment:
+      - FLASK_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Optional: Development mode with hot reload
+  oppnda-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: oppnda-dev
+    ports:
+      - "5001:5001"
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    command: ["python", "run.py", "--host", "0.0.0.0", "--port", "5001", "--debug"]
+    profiles:
+      - dev

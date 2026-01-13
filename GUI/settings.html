@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scenario Settings</title>
+    <link rel="stylesheet" href="/GUI/settings.css"> <!-- Add this line -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <!-- Add this line -->
+    <link rel="icon" href="/GUI/images/oppnda_logo.png" type="image/png">
+    <!-- Tagify CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">
+    <!-- Tagify JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
+</head>
+
+<body>
+
+
+
+    <div id="tabs">
+        <div class="sidebar-logo">
+            <img src="/GUI/images/o4.png" alt="Sidebar Logo">
+        </div>
+        <button class="tablinks active" onclick="openTab(event, 'ScenarioSettings')">Settings</button>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                document.getElementById("ScenarioSettings").style.display = "block";
+            });
+        </script>
+        <button class="tablinks" style="margin-left: 1vw;" onclick="openTab(event, 'InterfaceSettings')">>
+            Interface</button>
+        <button class="tablinks" style="margin-left: 1vw;" onclick="openTab(event, 'GroupSettings')">> Group</button>
+        <button class="tablinks" style="margin-left: 1vw;" onclick="openTab(event, 'ReportSettings')">> Report</button>
+        <button class="tablinks" style="margin-left: 1vw;" onclick="openTab(event, 'EventSettings')">> Events</button>
+        <button class="tablinks" style="margin-left: 1vw;" onclick="openTab(event, 'OverlayMovement')">> Map Based
+            Movement</button>
+        <button class="tablinks" onclick="openTab(event, 'UpdateConfiguration')">Update & Run</button>
+        <button class="tablinks" onclick="openTab(event, 'DataAnalysis')">Data Analysis</button>
+        <button class="tablinks" onclick="openTab(event, 'PostProcessing')">Post-Processing</button>
+        <div class="group-logo-button">
+            <h4>Developed by</h4>
+            <img src="/GUI/images/rglogo.png" alt="Group Logo" onclick="openTab(event, 'MembersPage')">
+        </div>
+    </div>
+    <br><br><br>
+    <!-- Scenario Settings -->
+
+    <div id="ScenarioSettings" class="tabcontent">
+        <div class="banner-image" style="flex: 1;">
+            <img src="/GUI/images/o8.png" alt="Banner Image" style="width: 100%; height: auto; border-radius: 1%;">
+        </div>
+        <div class="split-container">
+            <!-- Left side: Scenario Settings -->
+            <div>
+                <h2>Scenario Settings</h2>
+                <form id="scenarioForm" class="scenario-grid">
+
+                    <div class="form-group">
+                        <label for="scenarioName"
+                            data-tooltip="Unique identifier for this simulation run. Used in output file names.">Scenario
+                            Name:</label>
+                        <input type="text" id="scenarioName" name="scenarioName" value="default_scenario">
+                    </div>
+
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="nameAdd">
+                        <label for="nameAdd"
+                            data-tooltip="Appends timestamp to scenario name for unique identification.">Include Time &
+                            Date</label>
+                    </div>
+
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="simulateConnections" name="simulateConnections" checked>
+                        <label for="simulateConnections"
+                            data-tooltip="Enable to simulate wireless connections between nodes. Required for message transfer.">Simulate
+                            Connections</label>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="updateInterval"
+                                data-tooltip="Time between simulation updates. Lower = more precision but slower. Typical: 0.1-1.0s">Update
+                                Interval (seconds):</label>
+                            <input type="number" id="updateInterval" name="updateInterval" value="0.1" step="0.1"
+                                min="0">
+                        </div>
+
+
+                        <div class="form-group">
+                            <label for="endTime"
+                                data-tooltip="Total simulation duration. 43200s = 12 hours, 86400s = 24 hours.">End Time
+                                (seconds):</label>
+                            <input type="number" id="endTime" name="endTime" value="43200" min="0" max="604800">
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Right side: WKT Generator -->
+            <div class="wkt-form-container">
+                <h2><i class="fas fa-map-marked-alt"></i> WKT Generator</h2>
+                <form id="wktMapForm" action="http://localhost:5000/generate" method="POST" target="_blank">
+                    <div class="form-group">
+                        <label for="wkt_location">
+                            <i class="fas fa-map-marker-alt"></i> Location
+                        </label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="wkt_location" name="location"
+                                placeholder="Enter city name (e.g., Dhaka, Bangladesh)" required>
+                            <button type="button" class="full-width-button" id="wktTestLocation">
+                                <i class="fas fa-search"></i> Test
+                            </button>
+                        </div>
+                        <div id="wktLocationStatus" style="display: none;" class="alert"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="wkt_map_size">
+                            <i class="fas fa-expand-arrows-alt"></i> Map Size (meters)
+                        </label>
+                        <input type="number" class="form-control" id="wkt_map_size" name="map_size" value="5000"
+                            min="500" max="50000">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Detail Level</label>
+                        <div class="form-row">
+                            <label class="checkbox-group">
+                                <input type="radio" name="detail_level" value="detailed" checked>
+                                Detailed
+                            </label>
+                            <label class="checkbox-group">
+                                <input type="radio" name="detail_level" value="simplified">
+                                Simplified
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="wkt_output_name">
+                            <i class="fas fa-file-alt"></i> Output Filename
+                        </label>
+                        <input type="text" class="form-control" id="wkt_output_name" name="output_name"
+                            placeholder="e.g., dhaka_map" required pattern="[a-zA-Z0-9_-]+">
+                    </div>
+
+                    <button type="submit" class="full-width-button">
+                        <i class="fas fa-map"></i> Generate WKT Map
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interface Tab -->
+    <div id="InterfaceSettings" class="tabcontent">
+        <h2>Interface Settings</h2>
+
+        <!-- Form for Adding New Interface -->
+        <form id="newInterfaceForm" class="interface-grid">
+
+            <div class="form-group">
+                <div class="hover-container">
+                    <div class="form-group">
+                        <label for="interfaceName" class="hover-text"
+                            data-tooltip="Unique name for this interface. Example: btInterface, wifiInterface">Interface
+                            Name:</label>
+                        <input type="text" id="interfaceName" name="interfaceName" required>
+                    </div>
+                    <div class="hover-tooltip">Transmit speed of the interface (bytes per second)</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="interfaceType"
+                        data-tooltip="Interface class. SimpleBroadcast = basic radio, InterferenceLimited = accounts for signal interference.">Type:</label>
+                    <select id="interfaceType" name="interfaceType" required>
+                        <option value="SimpleBroadcastInterface">Simple Broadcast Interface</option>
+                        <option value="InterferenceLimitedInterface">Interference Limited Interface</option>
+                        <option value="DistanceCapacityInterface">Distance Capacity Interface</option>
+                        <option value="ConnectivityOptimizer">Connectivity Optimizer</option>
+                        <option value="ConnectivityGrid">Connectivity Grid</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="transmitSpeed"
+                        data-tooltip="Data transfer rate in bytes/sec. 250k = Bluetooth (~2Mbps), 10M = WiFi.">Transmit
+                        Speed:</label>
+                    <input type="number" id="transmitSpeed" name="transmitSpeed" required min="1">
+                </div>
+                <div class="form-group">
+                    <label for="transmitRange"
+                        data-tooltip="Maximum communication distance in meters. Bluetooth ≈ 10m, WiFi ≈ 100m.">Transmit
+                        Range:</label>
+                    <input type="number" id="transmitRange" name="transmitRange" required min="1">
+                </div>
+
+            </div>
+
+            <div class="form-row">
+                <button type="button" class="add-button"
+                    style="font-size: 1rem; padding-top: 0.8%; padding-bottom: 0.8%;" onclick="addInterface()">Add
+                    Interface</button>
+                <button type="button" class="remove-button"
+                    style="font-size: 1rem; padding-top: 0.8%; padding-bottom: 0.8%;" onclick="removeInterface()">Remove
+                    All Interfaces</button>
+            </div>
+        </form>
+        <br>
+
+        <h3>Interface List</h3>
+        <!-- Interface List Table -->
+        <table border="1px" id="interfaceList">
+            <thead>
+                <tr>
+                    <th>Interface Name</th>
+                    <th>Type</th>
+                    <th>Transmit Speed</th>
+                    <th>Transmit Range</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Default Interfaces will be displayed here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+
+    <!-- Group Settings -->
+    <div id="GroupSettings" class="tabcontent">
+        <h2>Group Settings</h2>
+        <!-- Group Tab Form -->
+        <!-- Common Group Settings Form -->
+
+        <form id="commonGroupSettingsForm" class="interface-grid">
+
+            <h3>Common Group Settings</h3>
+
+            <div class="form-group">
+                <label for="commonMovementModel"
+                    data-tooltip="How nodes move in simulation. Map-based requires map files, Random moves freely.">Movement
+                    Model:</label>
+                <select id="commonMovementModel" name="movement">
+                    <option value="BusControlSystem">Bus Control System</option>
+                    <option value="BusMovement">Bus Movement</option>
+                    <option value="BusTravellerMovement">Bus Traveller Movement</option>
+                    <option value="CarMovement">Car Movement</option>
+                    <option value="ClusterMovement">Cluster Movement</option>
+                    <option value="EveningActivityControlSystem">Evening Activity Control System</option>
+                    <option value="EveningActivityMovement">Evening Activity Movement</option>
+                    <option value="EveningTrip">Evening Trip</option>
+                    <option value="ExtendedMovementModel">Extended Movement Model</option>
+                    <option value="ExternalMovement">External Movement</option>
+                    <option value="ExternalPathMovement">External Path Movement</option>
+                    <option value="GridLocation">Grid Location</option>
+                    <option value="HomeActivityMovement">Home Activity Movement</option>
+                    <option value="LinearFormation">Linear Formation</option>
+                    <option value="LinearMovement">Linear Movement</option>
+                    <option value="MapBasedMovement">Map Based Movement</option>
+                    <option value="MapRouteMovement">Map Route Movement</option>
+                    <option value="ModifiedRandomDirection">Modified Random Direction</option>
+                    <option value="MovementModel">Movement Model</option>
+                    <option value="OfficeActivityMovement">Office Activity Movement</option>
+                    <option value="RandomDirection">Random Direction</option>
+                    <option value="RandomWalk">Random Walk</option>
+                    <option value="RandomWaypoint">Random Waypoint</option>
+                    <option value="ShortestPathMapBasedMovement">Shortest Path Map Based Movement</option>
+                    <option value="StationaryMovement">Stationary Movement</option>
+                    <option value="SwitchableMovement">Switchable Movement</option>
+                    <option value="TransportMovement">Transport Movement</option>
+                    <option value="WorkingDayMovement">Working Day Movement</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="commonRouter"
+                        data-tooltip="Routing protocol for message forwarding. Epidemic floods all, Prophet uses history. Use semicolons for batch runs.">Router:</label>
+                    <input id="commonRouter" name="router" placeholder="Choose router(s)" value="EpidemicRouter"
+                        required>
+                </div>
+                <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+                        var input = document.getElementById('commonRouter');
+                        new Tagify(input, {
+                            whitelist: [
+                                "EpidemicRouter",
+                                "ProphetRouter",
+                                "SprayAndWaitRouter",
+                                "PassiveRouter",
+                                "DirectDeliveryRouter",
+                                "FirstContactRouter",
+                                "MaxPropRouter",
+                                "EpidemicOracleRouter",
+                                "ProphetV2Router",
+                                "LifeRouter"
+                            ],
+                            enforceWhitelist: false,
+                            dropdown: {
+                                maxItems: 10,
+                                enabled: 0,
+                                closeOnSelect: false
+                            }
+                        });
+                    });
+                </script>
+
+
+                <div class="form-group">
+                    <label for="commonInterface"
+                        data-tooltip="Network interfaces for this group. Select multiple for nodes with multiple radios.">Interface(s):</label>
+                    <input id="commonInterface" name="interface" placeholder="Select interface(s)" value="btInterface">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="commonBufferSize"
+                        data-tooltip="Message storage capacity per node. 5M = 5 megabytes. Larger = more messages but slower.">Buffer
+                        Size (Example: 5M):</label>
+                    <input type="text" id="commonBufferSize" name="bufferSize" value="5M">
+                </div>
+                <div class="form-group">
+                    <label for="commonWaitTime"
+                        data-tooltip="Min/max seconds to wait at each destination before moving. Format: min, max">Wait
+                        Time (Example: 0, 120):</label>
+                    <input type="text" id="commonWaitTime" name="WaitTime" value="0, 120">
+                </div>
+            </div>
+            <br>
+            <div class="form-group">
+                <label for="commonRouteFile"
+                    data-tooltip="WKT file defining routes for MapRouteMovement. Required for route-based models.">Route
+                    File:</label>
+                <input type="file" id="commonRouteFile" name="RouteFile" accept=".wkt"><br>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="commonSpeed"
+                        data-tooltip="Node movement speed in m/s. Walking: 0.5-1.5, Car: 10-20. Format: min, max">Speed
+                        (Example: 0.5, 1.5 (Walking Speed)):</label>
+                    <input type="text" id="commonSpeed" name="Speed" value="0.5, 1.5">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="commonTtl"
+                        data-tooltip="Message Time-To-Live in minutes. Messages expire after this. Use semicolons for batch.">TTL
+                        (Message TTL of 300 minutes (5 hours)):</label>
+                    <input type="text" id="commonTtl" name="commonTtl" value="300"><br>
+                </div>
+
+                <div class="form-group">
+                    <label for="commonNumberOfHost"
+                        data-tooltip="Number of nodes in this group. Total nodes = sum of all groups.">Number of
+                        Hosts:</label>
+                    <input type="number" id="commonNumberOfHost" name="commonNumberOfHost" value="40">
+                </div>
+            </div>
+            <br>
+        </form>
+
+        <h3>Router & Optimization Settings</h3>
+        <br>
+        <form id="RouterOptimizationForm">
+            <div class="form-row">
+                <!-- Prophet Router Settings -->
+                <fieldset>
+                    <legend>ProphetRouter Settings</legend>
+
+                    <label for="prophetRouterTimeUnit"
+                        data-tooltip="Time unit for Prophet predictability decay. Lower = faster decay.">Seconds in Time
+                        Unit:</label>
+
+                    <input type="number" id="prophetRouterTimeUnit" name="prophetRouterTimeUnit" value="30">
+                </fieldset>
+
+                <!-- Spray and Wait Router Settings -->
+                <fieldset>
+                    <legend>SprayAndWaitRouter Settings</legend>
+
+                    <label for="sprayAndWaitCopies"
+                        data-tooltip="Initial message copies in Spray-and-Wait. Higher = more delivery chance, more overhead.">Number
+                        of Copies:</label>
+                    <input type="number" id="sprayAndWaitCopies" name="sprayAndWaitCopies" value="6">
+                    <br>
+                    <br>
+                    <label for="sprayAndWaitBinaryMode"
+                        data-tooltip="Binary mode splits copies in half on forward. More efficient than source spray.">Binary
+                        Mode:</label>
+                    <input type="checkbox" id="sprayAndWaitBinaryMode" name="sprayAndWaitBinaryMode" checked>
+                </fieldset>
+
+                <!-- Optimization Settings -->
+                <fieldset>
+                    <legend>Optimization Settings</legend>
+
+                    <label for="optimizationCellSizeMult"
+                        data-tooltip="Grid cell size for connection checking. Higher = faster but less accurate.">Cell
+                        Size Multiplier:</label>
+                    <input type="number" id="optimizationCellSizeMult" name="optimizationCellSizeMult" value="5">
+                    <br>
+                    <br>
+                    <label for="optimizationRandomizeUpdateOrder"
+                        data-tooltip="Randomize node update order to avoid systematic bias in message forwarding.">Randomize
+                        Update Order:</label>
+                    <input type="checkbox" id="optimizationRandomizeUpdateOrder" name="optimizationRandomizeUpdateOrder"
+                        checked>
+                </fieldset>
+            </div>
+        </form>
+
+        <!-- Energy Model Settings -->
+        <br>
+        <fieldset id="energySettingsFieldset">
+            <legend><i class="fas fa-bolt"></i> Energy Model Settings</legend>
+
+            <div class="checkbox-container">
+                <input type="checkbox" id="enableEnergyModel" name="enableEnergyModel">
+                <label for="enableEnergyModel"
+                    data-tooltip="Enable energy consumption simulation. Nodes can run out of battery and stop forwarding.">Enable
+                    Energy Model</label>
+            </div>
+
+            <div id="energyFields" style="display: none;">
+                <br>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="initialEnergy"
+                            data-tooltip="Starting energy level for each node. Higher = longer node lifetime.">Initial
+                            Energy (units):</label>
+                        <input type="number" id="initialEnergy" name="initialEnergy" value="100" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="scanEnergy"
+                            data-tooltip="Energy consumed per neighbor discovery scan. Frequent scanning drains battery.">Scan
+                            Energy (units/scan):</label>
+                        <input type="number" id="scanEnergy" name="scanEnergy" value="0.1" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="transmitEnergy"
+                            data-tooltip="Energy cost per byte transmitted. Large messages consume more energy.">Transmit
+                            Energy (units/byte):</label>
+                        <input type="number" id="transmitEnergy" name="transmitEnergy" value="0.001" step="0.0001"
+                            min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="baseEnergy"
+                            data-tooltip="Idle power consumption per second. Simulates always-on radio circuits.">Base
+                            Energy (units/sec):</label>
+                        <input type="number" id="baseEnergy" name="baseEnergy" value="0.01" step="0.001" min="0">
+                    </div>
+                </div>
+                <p class="form-hint">
+                    <i class="fas fa-info-circle"></i> Energy consumption: base + scan per discovery + transmit per byte
+                    sent
+                </p>
+            </div>
+        </fieldset>
+
+        <form id="newGroupForm">
+            <br>
+            <h3>Custom Groups</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="groupID">Group ID:</label>
+                    <input type="text" id="groupID" name="groupID" required><br>
+                </div>
+                <div class="form-group">
+                    <label for="numberOfHosts">Number of Hosts:</label>
+                    <input type="number" id="numberOfHosts" name="numberOfHosts" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="Movement">Movement Model:</label>
+                    <select id="Movement" name="Movement">
+                        <option value="BusControlSystem">Bus Control System</option>
+                        <option value="BusMovement">Bus Movement</option>
+                        <option value="BusTravellerMovement">Bus Traveller Movement</option>
+                        <option value="CarMovement">Car Movement</option>
+                        <option value="ClusterMovement">Cluster Movement</option>
+                        <option value="EveningActivityControlSystem">Evening Activity Control System</option>
+                        <option value="EveningActivityMovement">Evening Activity Movement</option>
+                        <option value="EveningTrip">Evening Trip</option>
+                        <option value="ExtendedMovementModel">Extended Movement Model</option>
+                        <option value="ExternalMovement">External Movement</option>
+                        <option value="ExternalPathMovement">External Path Movement</option>
+                        <option value="GridLocation">Grid Location</option>
+                        <option value="HomeActivityMovement">Home Activity Movement</option>
+                        <option value="LinearFormation">Linear Formation</option>
+                        <option value="LinearMovement">Linear Movement</option>
+                        <option value="MapBasedMovement">Map Based Movement</option>
+                        <option value="MapRouteMovement">Map Route Movement</option>
+                        <option value="ModifiedRandomDirection">Modified Random Direction</option>
+                        <option value="MovementModel">Movement Model</option>
+                        <option value="OfficeActivityMovement">Office Activity Movement</option>
+                        <option value="RandomDirection">Random Direction</option>
+                        <option value="RandomWalk">Random Walk</option>
+                        <option value="RandomWaypoint">Random Waypoint</option>
+                        <option value="ShortestPathMapBasedMovement">Shortest Path Map Based Movement</option>
+                        <option value="StationaryMovement">Stationary Movement</option>
+                        <option value="SwitchableMovement">Switchable Movement</option>
+                        <option value="TransportMovement">Transport Movement</option>
+                        <option value="WorkingDayMovement">Working Day Movement</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="movementRouteType">Route Type:</label>
+                    <select id="movementRouteType" name="movementRouteType">
+                        <option value="1">Type 1</option>
+                        <option value="2">Type 2</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="waitTimeMin">Wait Time Min (seconds):</label>
+                    <input type="number" id="waitTimeMin" name="waitTimeMin">
+                </div>
+                <div class="form-group">
+                    <label for="waitTimeMax">Wait Time Max (seconds):</label>
+                    <input type="number" id="waitTimeMax" name="waitTimeMax">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="speedMin">Speed Min (m/s):</label>
+                    <input type="number" step="0.1" id="speedMin" name="speedMin">
+                </div>
+
+                <div class="form-group">
+                    <label for="speedMax">Speed Max (m/s):</label>
+                    <input type="number" step="0.1" id="speedMax" name="speedMax">
+                </div>
+            </div>
+
+            <br>
+            <div class="form-group">
+                <label for="router">Router:</label>
+                <select id="router" name="router">
+                    <option value="EpidemicRouter">Epidemic Router</option>
+                    <option value="ProphetRouter">Prophet Router</option>
+                    <option value="ProphetV2Router">Prophet V2 Router</option>
+                    <option value="SprayAndWaitRouter">Spray And Wait Router</option>
+                    <option value="DirectDeliveryRouter">Direct Delivery Router</option>
+                    <option value="FirstContactRouter">First Contact Router</option>
+                    <option value="MaxPropRouter">MaxProp Router</option>
+                    <option value="PassiveRouter">Passive Router</option>
+                    <option value="EpidemicOracleRouter">Epidemic Oracle Router</option>
+                    <option value="LifeRouter">Life Router</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bufferSize">Buffer Size (bytes):</label>
+                    <input type="number" id="bufferSize" name="bufferSize"><br>
+                </div>
+                <div class="form-group">
+                    <label for="msgTtl">Message TTL:</label>
+                    <input type="text" id="msgTtl" name="msgTtl" value="300"><br>
+                </div>
+            </div>
+            <h3>Active Times (0 for disable it):</h3>
+            <label for="activeTimeStart1">Active Time (start1, end1, start2, end2...):</label>
+            <input type="text" id="activeTimeStart1" value="0"><br>
+
+            <div class="form-row">
+                <button type="submit" class="add-button"
+                    style="font-size: 1rem; padding-top: 0.8%; padding-bottom: 0.8%;">Add Group</button>
+                <button type="submit" class="remove-button"
+                    style="font-size: 1rem; padding-top: 0.8%; padding-bottom: 0.8%;">Remove All Groups</button>
+            </div>
+        </form>
+        <br><br>
+        <h3>Group List</h3>
+        <!-- Group List Table -->
+        <table id="groupList">
+            <thead>
+                <tr>
+                    <th>Group ID</th>
+                    <th>Number of Hosts</th>
+                    <th>Movement Model</th>
+                    <th>Movement Route</th>
+                    <th>Route Type</th>
+                    <th>Router</th>
+                    <th>Active Times</th>
+                    <th>Message TTL</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+    </div>
+
+
+    <div id="EventSettings" class="tabcontent">
+        <h2>Event Settings</h2>
+        <div class="form-group">
+            <!-- Form for Adding New Event -->
+            <form id="newEventForm">
+                <label for="eventClass"
+                    data-tooltip="Event generator class. MessageEventGenerator creates random messages between hosts.">Event
+                    Class:</label>
+                <input type="text" id="eventClass" name="eventClass" value="MessageEventGenerator" readonly>
+                <br>
+                <label for="eventIntervalMin"
+                    data-tooltip="Time between new message creation. E.g., 25-35 means one message every 25-35 seconds.">Creation
+                    Interval (seconds):</label>
+                <div class="form-row">
+                    <input type="number" id="eventIntervalMin" name="eventIntervalMin" value="25" required>
+                    <p style="padding-top: 1vh;">to</p>
+                    <input type="number" id="eventIntervalMax" name="eventIntervalMax" value="35" required>
+                </div>
+                <br>
+                <label for="eventSizeMin"
+                    data-tooltip="Message payload size range. Use k for kilobytes, M for megabytes. E.g., 500k to 1M.">Message
+                    Size: (Use k for Kb, M for MB)</label>
+                <div class="form-row">
+                    <input type="text" id="eventSizeMin" name="eventSizeMin" value="500" required>
+                    <p style="padding-top: 1vh;">to</p>
+                    <input type="text" id="eventSizeMax" name="eventSizeMax" value="1000" required>
+                </div>
+                <br>
+                <label for="eventHostsMin"
+                    data-tooltip="Host address range for message source/destination. 0-126 means any host from 0 to 126.">Message
+                    Source/Destination Hosts:</label>
+                <div class="form-row">
+                    <input type="number" id="eventHostsMin" name="eventHostsMin" value="0" required>
+                    <p style="padding-top: 1vh;">to</p>
+                    <input type="number" id="eventHostsMax" name="eventHostsMax" value="126" required>
+                </div>
+                <br>
+                <label for="eventPrefix"
+                    data-tooltip="Prefix for message IDs. 'M' creates M1, M2, M3... for easy identification in logs.">Message
+                    ID Prefix:</label>
+                <input type="text" id="eventPrefix" name="eventPrefix" value="M" required>
+                <br>
+                <div class="form-row">
+                    <button type="button" class="add-button"
+                        style="font-size: 1rem; padding-top: 0.8%; padding-bottom: 0.8%;">Add Event</button>
+                    <button type="button" class="remove-button"
+                        style="font-size: 1rem; padding-top: 0.8%; padding-bottom: 0.8%;">Remove All Events</button>
+                </div>
+            </form>
+            <br>
+        </div>
+        <!-- Event List Table -->
+        <table border="1px" id="eventList">
+            <thead>
+                <tr>
+                    <th>Event Class</th>
+                    <th>Creation Interval (s)</th>
+                    <th>Message Size (kB)</th>
+                    <th>Hosts</th>
+                    <th>Prefix</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Default Events will be displayed here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Movement Model Settings -->
+    <div id="OverlayMovement" class="tabcontent">
+
+        <form id="guiForm">
+            <h2>GUI Settings</h2>
+            <div class="form-group">
+                <label for="underlayImageFileName">Overlay Image:</label>
+                <b>Default: data/helsinki_underlay.png</b>
+                <input type="file" id="underlayImageFileName" name="underlayImageFileName" accept="image/*">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="underlayImageOffset">Underlay Image Offset: </label>
+                    <input type="text" id="underlayImageOffset" name="underlayImageOffset" value="64,20"
+                        placeholder="Image offset in pixels (x, y) (Default: 64, 20)">
+                </div>
+                <div class="form-group">
+                    <label for="underlayImageScale">Underlay Image Scale: </label>
+                    <input type="number" id="underlayImageScale" name="underlayImageScale" value="4.75"
+                        placeholder="Scaling factor for the image (Default: 4.75)">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="underlayImageRotate">Underlay Image Rotate: </label>
+                    <input type="number" id="underlayImageRotate" name="underlayImageRotate" value="-0.015"
+                        placeholder="Image rotation (radians) ( Default: -0.015)">
+                </div>
+                <div class="form-group">
+                    <label for="eventLogPanelNrofEvents">Number of Events: </label>
+                    <input type="number" id="eventLogPanelNrofEvents" name="eventLogPanelNrofEvents" value="100"
+                        placeholder="how many events to show in the log panel (default = 100)">
+                </div>
+            </div>
+        </form>
+        <br>
+        <br>
+        <form id="movementModelForm">
+            <h2>Movement Model Settings</h2>
+            <!-- RNG Seed -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="rngSeed"
+                        data-tooltip="Random number seed for reproducible runs. Use semicolons for batch runs: 1; 2; 3">RNG
+                        Seed:</label>
+                    <input type="text" id="rngSeed" name="rngSeed" value="1">
+                </div>
+
+                <div class="form-group">
+                    <label for="warmup"
+                        data-tooltip="Pre-simulation time to spread nodes before message events. Avoids clustering effects.">Warmup
+                        Time (seconds):</label>
+                    <input type="number" id="warmup" name="warmup" value="1000">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="worldSize"
+                    data-tooltip="Simulation area dimensions. Should match map file boundaries. Format: width, height">World
+                    Size (width, height in meters):</label>
+                <input type="text" id="worldSize" name="worldSize" value="4500, 3400">
+            </div>
+
+
+
+            <div class="form-group">
+                <label for="mapFiles"
+                    data-tooltip="WKT map files defining roads, paths, and POIs. Required for map-based movement models.">Map
+                    Files:</label>
+                <input type="file" id="mapFiles" name="mapFiles[]" accept=".wkt" multiple>
+            </div>
+            <br>
+            <h4>Selected Map Files:</h4>
+            <ul id="fileList" style="list-style-type: disc; padding-left: 20px;"></ul>
+        </form>
+
+        <!-- POI Configuration -->
+        <br>
+        <h3><i class="fas fa-map-pin"></i> Points of Interest (POI)</h3>
+        <p class="form-hint">
+            Define probability of visiting different map areas. Used with ShortestPathMapBasedMovement.
+        </p>
+
+        <div class="checkbox-container">
+            <input type="checkbox" id="poiEnabled" name="poiEnabled">
+            <label for="poiEnabled"
+                data-tooltip="Define probability-weighted destinations for ShortestPathMapBasedMovement.">Enable POI
+                Configuration</label>
+        </div>
+
+        <div id="poiConfiguration" style="display: none;">
+            <br>
+            <table border="1px" id="poiTable">
+                <thead>
+                    <tr>
+                        <th>POI Index</th>
+                        <th>Probability (0-1)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="poiTableBody">
+                    <!-- Dynamic rows added here -->
+                </tbody>
+            </table>
+            <br>
+            <button type="button" class="add-button" onclick="addPOIRow()">
+                <i class="fas fa-plus"></i> Add POI
+            </button>
+
+            <div class="form-group">
+                <label for="poiPreview" data-tooltip="Formatted POI string that will be used in the config file.">POI
+                    String Preview:</label>
+                <input type="text" id="poiPreview" name="poiPreview" readonly
+                    placeholder="e.g., 1, 0.3, 2, 0.5, 3, 0.2">
+            </div>
+        </div>
+
+        <!-- Display selected map files -->
+
+    </div>
+
+    <!-- Report Settings -->
+    <div id="ReportSettings" class="tabcontent">
+        <h2>Report Settings</h2>
+
+        <!-- Form for Adding New Reports -->
+        <form id="newReportForm" class="interface-grid">
+
+            <div class="form-group">
+                <label for="reportClass"
+                    data-tooltip="Report type to generate. MessageStatsReport gives overall delivery metrics.">Report
+                    Class:</label>
+                <select id="reportClass" name="reportClass" required>
+                    <option value="AdjacencyGraphvizReport">AdjacencyGraphvizReport</option>
+                    <option value="BufferOccupancyReport">BufferOccupancyReport</option>
+                    <option value="ConnectivityDtnsim2Report">ConnectivityDtnsim2Report</option>
+                    <option value="ConnectivityONEReport">ConnectivityONEReport</option>
+                    <option value="ConnectivityReportConnector">ConnectivityReportConnector</option>
+                    <option value="ContactsDuringAnICTReport">ContactsDuringAnICTReport</option>
+                    <option value="ContactsPerHourReport">ContactsPerHourReport</option>
+                    <option value="ContactTimesReport">ContactTimesReport</option>
+                    <option value="CreatedMessagesReport">CreatedMessagesReport</option>
+                    <option value="DeliveredMessagesReport">DeliveredMessagesReport</option>
+                    <option value="DistanceDelayReport">DistanceDelayReport</option>
+                    <option value="DTN2Reporter">DTN2Reporter</option>
+                    <option value="EncountersVSUniqueEncountersReport">EncountersVSUniqueEncountersReport</option>
+                    <option value="EnergyLevelReport">EnergyLevelReport</option>
+                    <option value="EventLogReport">EventLogReport</option>
+                    <option value="InterContactTimesReport">InterContactTimesReport</option>
+                    <option value="JumpSizeDistributionReport">JumpSizeDistributionReport</option>
+                    <option value="LocationSnapshotReport">LocationSnapshotReport</option>
+                    <option value="MessageAvailabilityReport">MessageAvailabilityReport</option>
+                    <option value="MessageCopyCountReport">MessageCopyCountReport</option>
+                    <option value="MessageDelayReport">MessageDelayReport</option>
+                    <option value="MessageDeliveryReport">MessageDeliveryReport</option>
+                    <option value="MessageGraphvizReport">MessageGraphvizReport</option>
+                    <option value="MessageLocationReport">MessageLocationReport</option>
+                    <option value="MessageReport">MessageReport</option>
+                    <option value="MessageStatsReport">MessageStatsReport</option>
+                    <option value="MovementListenerTestReport">MovementListenerTestReport</option>
+                    <option value="MovementNs2Report">MovementNs2Report</option>
+                    <option value="NodeDensityReport">NodeDensityReport</option>
+                    <option value="PingAppReporter">PingAppReporter</option>
+                    <option value="RadiusOfGyrationReport">RadiusOfGyrationReport</option>
+                    <option value="SamplingReport">SamplingReport</option>
+                    <option value="SnapshotReport">SnapshotReport</option>
+                    <option value="TotalContactTimeReport">TotalContactTimeReport</option>
+                    <option value="TotalEncountersReport">TotalEncountersReport</option>
+                    <option value="UniqueEncountersReport">UniqueEncountersReport</option>
+
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="reportWarmup"
+                    data-tooltip="Ignore data from this initial period. Avoids skewed results from startup transients.">Report
+                    Warmup Time (Sec):</label>
+                <input type="number" id="reportWarmup" name="reportWarmup" value="0">
+            </div>
+
+            <br>
+            <div class="form-row">
+
+                <input type="text" id="reportDir" name="reportDir" value="reports/" readonly>
+                <button type="button" class="edit-button" id="browseDirButton">Browse</button>
+                <button type="button" class="add-button" id="addReportButton">Add Report</button>
+
+            </div>
+        </form>
+        <br>
+
+        <!-- Table for Displaying Reports -->
+        <table id="reportList">
+            <thead>
+                <tr>
+                    <th>Report Class</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+
+    <div id="UpdateConfiguration" class="tabcontent">
+
+        <!-- Import ONE Configuration -->
+        <fieldset style="margin-bottom: 20px;">
+            <legend><i class="fas fa-file-import"></i> Import ONE Configuration</legend>
+            <div class="form-group">
+                <label for="importConfigFile">Load existing ONE .txt config file:</label>
+                <input type="file" id="importConfigFile" accept=".txt">
+            </div>
+            <button type="button" class="edit-button" onclick="importONEConfig()">
+                <i class="fas fa-upload"></i> Import Config
+            </button>
+            <span id="importStatus" style="margin-left: 10px; color: #64748b;"></span>
+        </fieldset>
+
+        <h2>Export Settings</h2>
+
+        <div class="form-row">
+            <button type="button" class="add-button" onclick="saveAllSettings()">Save Custom Settings</button>
+            <button type="button" class="edit-button" onclick="saveDefaultSettings()">Save Default Settings</button>
+        </div>
+        <br>
+        <form class="interface-grid">
+            <h2 style="margin-bottom: 0;">Run</h2>
+            <div class="form-group" style="padding-bottom: 1vh;">
+                <div class="checkbox-container" style="margin-top: 0;">
+                    <input type="checkbox" id="batchMode" name="batchMode">
+                    <label for="batchMode">Batch Mode</label>
+                </div>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="compile" name="compile">
+                    <label for="compile">Compile</label>
+                </div>
+            </div>
+            <div class="form-row">
+
+
+            </div>
+            <div class="form-group">
+                <button type="button" class="full-width-button" onclick="runONE()">Run ONE</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="DataAnalysis" class="tabcontent">
+        <h2>Data Analysis & Visualization</h2>
+        <button type="button" class="edit-button" id="browseDirButton" onclick="window.location.href='/nda'">Show
+            Analysis Results</button>
+        <div class="manual-section"
+            style="max-width: 95vw; margin: 2em auto; background: #f8f9fa; border-radius: 8px; padding: 2em; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <h2 style="color: #2c50b1;">Visualizations:</h2>
+            </h2>
+            <h3>Types of Graphs:</h3>
+            <ul>
+                <li><strong>Correlation Heatmap</strong></li>
+                <li><strong>Line Plot</strong></li>
+                <li><strong>Bar Plot</strong></li>
+                <li><strong>Pairplot</strong></li>
+            </ul>
+            <br>
+            <h3>Graph Descriptions:</h3>
+            <ul>
+                <li>
+                    <strong>Correlation Heatmap</strong>
+                    <ul>
+                        <li>Displays the correlation between key performance indicators (KPIs) such as buffer time
+                            average, delivery probability, latency average, and overhead ratio for each router.</li>
+                        <li>Helps identify relationships and dependencies among different metrics.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Line Plot:</strong>
+                    <ul>
+                        <li>Compares all routers in terms of KPIs over a range of values (e.g., buffer size, TTL).</li>
+                        <li>Useful for visualizing trends and performance differences between routers.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Bar Plot:</strong>
+                    <ul>
+                        <li>Compares routers under constant TTL and buffer size conditions.</li>
+                        <li>Shows the performance of each router for a fixed scenario, making it easy to compare their
+                            effectiveness.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Pairplot:</strong>
+                    <ul>
+                        <li>Visualizes pairwise relationships between multiple KPIs.</li>
+                        <li>Helps in understanding the distribution and correlation between different metrics for each
+                            router.</li>
+                    </ul>
+                </li>
+            </ul>
+            <br>
+            <h3>Usage Tips:</h3>
+            <ul>
+                <li>Use the <strong>Correlation Heatmap</strong> to quickly spot which KPIs are strongly related.</li>
+                <li>Refer to <strong>Line Plots</strong> for performance trends across routers.</li>
+                <li>Check <strong>Bar Plots</strong> for direct comparison under specific settings.</li>
+                <li>Explore <strong>Pairplots</strong> for deeper analysis of metric relationships.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Post-Processing Configuration -->
+    <div id="PostProcessing" class="tabcontent">
+        <h2>Post-Processing Configuration</h2>
+        <p style="color: #64748b; margin-bottom: 20px;">Configure batch processing, analysis, and regression settings.
+            Changes are saved to JSON files.</p>
+
+        <!-- Batch Config Section (FIRST) -->
+        <fieldset id="batchConfigSection">
+            <legend><i class="fas fa-layer-group"></i> Batch Processing Configuration</legend>
+            <form id="batchConfigForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="batchFolder">Report Folder:</label>
+                        <div class="folder-input-wrapper" onclick="browseDirectory('batchFolder')">
+                            <i class="fas fa-folder-open folder-icon"></i>
+                            <input type="text" id="batchFolder" name="folder" placeholder="Click to select folder"
+                                readonly class="folder-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="batchExtension">File Extension:</label>
+                        <input type="text" id="batchExtension" name="extension" placeholder="e.g., .txt">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="batchFileContains">File Name Contains:</label>
+                        <input type="text" id="batchFileContains" name="file_contains"
+                            placeholder="e.g., CCNApplicationReport">
+                    </div>
+                    <div class="form-group">
+                        <label for="batchDelimiter">Filename Delimiter:</label>
+                        <input type="text" id="batchDelimiter" name="delimiter" placeholder="e.g., _" maxlength="5">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="batchDataSeparator">Data Separator:</label>
+                        <input type="text" id="batchDataSeparator" name="data_separator" placeholder="e.g., :"
+                            maxlength="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="batchPrecision">Output Precision:</label>
+                        <input type="number" id="batchPrecision" name="precision" min="1" max="10" value="4">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="batchIgnoreFields">Ignore Fields:</label>
+                    <input id="batchIgnoreFields" name="ignore_fields" placeholder="Select fields to ignore">
+                </div>
+
+                <!-- Advanced Batch Settings -->
+                <details class="advanced-settings">
+                    <summary><i class="fas fa-cog"></i> Advanced Settings</summary>
+                    <div class="advanced-content">
+                        <h4 style="margin: 15px 0 10px;">Filename Pattern Components</h4>
+                        <p style="color: #64748b; font-size: 13px; margin-bottom: 10px;">Define the component names and
+                            their positions in the filename (split by delimiter)</p>
+                        <table class="dynamic-table" id="batchComponentsTable">
+                            <thead>
+                                <tr>
+                                    <th>Component Name</th>
+                                    <th>Position</th>
+                                    <th style="width: 60px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batchComponentsBody">
+                                <!-- Dynamic rows will be added here -->
+                            </tbody>
+                        </table>
+                        <button type="button" class="add-button" style="margin-top: 10px;"
+                            onclick="addBatchComponent()">
+                            <i class="fas fa-plus"></i> Add Component
+                        </button>
+
+                        <h4 style="margin: 15px 0 10px;">Average Groups</h4>
+                        <p style="color: #64748b; font-size: 13px; margin-bottom: 10px;">Define how files should be
+                            grouped for averaging</p>
+                        <table class="dynamic-table" id="batchAverageGroupsTable">
+                            <thead>
+                                <tr>
+                                    <th>Group Name</th>
+                                    <th>Group By (comma separated)</th>
+                                    <th>Min Files</th>
+                                    <th>Output Template</th>
+                                    <th style="width: 60px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batchAverageGroupsBody">
+                                <!-- Dynamic rows will be added here -->
+                            </tbody>
+                        </table>
+                        <button type="button" class="add-button" style="margin-top: 10px;"
+                            onclick="addBatchAverageGroup()">
+                            <i class="fas fa-plus"></i> Add Average Group
+                        </button>
+                    </div>
+                </details>
+            </form>
+        </fieldset>
+
+        <!-- Analysis Config Section (SECOND) -->
+        <fieldset id="analysisConfigSection">
+            <legend><i class="fas fa-chart-line"></i> Analysis Configuration</legend>
+            <form id="analysisConfigForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="analysisReportDir">Report Directory:</label>
+                        <div class="folder-input-wrapper" onclick="browseDirectory('analysisReportDir')">
+                            <i class="fas fa-folder-open folder-icon"></i>
+                            <input type="text" id="analysisReportDir" name="report_dir"
+                                placeholder="Click to select folder" readonly class="folder-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="analysisPlotsDir">Plots Directory:</label>
+                        <div class="folder-input-wrapper" onclick="browseDirectory('analysisPlotsDir')">
+                            <i class="fas fa-folder-open folder-icon"></i>
+                            <input type="text" id="analysisPlotsDir" name="plots_dir"
+                                placeholder="Click to select folder" readonly class="folder-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="analysisDataSeparator">Data Separator:</label>
+                        <input type="text" id="analysisDataSeparator" name="data_separator" placeholder="e.g., :"
+                            maxlength="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="analysisReportExtension">Report Extension:</label>
+                        <input type="text" id="analysisReportExtension" name="report_extension"
+                            placeholder="e.g., .txt">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="analysisReportTypes">Report Types:</label>
+                    <input id="analysisReportTypes" name="report_types" placeholder="Select or type report types">
+                </div>
+
+                <div class="form-group">
+                    <label for="analysisMetrics">Metrics to Include:</label>
+                    <input id="analysisMetrics" name="metrics_include" placeholder="Select or type metrics">
+                </div>
+
+                <div class="form-group">
+                    <label for="analysisIgnoreMetrics">Metrics to Ignore:</label>
+                    <input id="analysisIgnoreMetrics" name="metrics_ignore" placeholder="Select or type metrics">
+                </div>
+
+                <div class="form-group">
+                    <label for="enabledPlotsTagify">Enabled Plots:</label>
+                    <input id="enabledPlotsTagify" name="enabled_plots" placeholder="Select plots to enable">
+                </div>
+
+                <!-- Advanced Analysis Settings -->
+                <details class="advanced-settings">
+                    <summary><i class="fas fa-cog"></i> Advanced Settings</summary>
+                    <div class="advanced-content">
+                        <h4 style="margin: 15px 0 10px;">Filename Structure</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="analysisFilenameDelimiter">Filename Delimiter:</label>
+                                <input type="text" id="analysisFilenameDelimiter" name="filename_delimiter"
+                                    placeholder="_" maxlength="3">
+                            </div>
+                            <div class="form-group">
+                                <label for="analysisReportTypePos">Report Type Position:</label>
+                                <input type="number" id="analysisReportTypePos" name="report_type_pos" value="0"
+                                    min="0">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="analysisRouterPos">Router Position:</label>
+                                <input type="number" id="analysisRouterPos" name="router_pos" value="1" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="analysisGroupingTypePos">Grouping Type Position:</label>
+                                <input type="number" id="analysisGroupingTypePos" name="grouping_type_pos" value="-1">
+                            </div>
+                        </div>
+
+                        <h4 style="margin: 15px 0 10px;">Plot Thresholds</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="analysisMinValuesLine">Min Values for Line Plot:</label>
+                                <input type="number" id="analysisMinValuesLine" name="min_values_line" value="2"
+                                    min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="analysisMinValuesSurface">Min Values for Surface:</label>
+                                <input type="number" id="analysisMinValuesSurface" name="min_values_surface" value="3"
+                                    min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="analysisMinFilesHeatmap">Min Files for Heatmap:</label>
+                                <input type="number" id="analysisMinFilesHeatmap" name="min_files_heatmap" value="2"
+                                    min="1">
+                            </div>
+                        </div>
+
+                        <h4 style="margin: 15px 0 10px;">Grouping Labels</h4>
+                        <p style="color: #64748b; font-size: 13px; margin-bottom: 10px;">Define display labels for each
+                            grouping type in plots</p>
+                        <table class="dynamic-table" id="analysisGroupingLabelsTable">
+                            <thead>
+                                <tr>
+                                    <th>Grouping Type</th>
+                                    <th>Display Label</th>
+                                    <th style="width: 60px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analysisGroupingLabelsBody">
+                                <!-- Dynamic rows will be added here -->
+                            </tbody>
+                        </table>
+                        <button type="button" class="add-button" style="margin-top: 10px;"
+                            onclick="addAnalysisGroupingLabel()">
+                            <i class="fas fa-plus"></i> Add Grouping Label
+                        </button>
+                    </div>
+                </details>
+            </form>
+        </fieldset>
+
+        <!-- Regression Config Section (THIRD) -->
+        <fieldset id="regressionConfigSection">
+            <legend><i class="fas fa-brain"></i> Regression Configuration</legend>
+            <form id="regressionConfigForm">
+                <div class="checkbox-container"
+                    style="margin-bottom: 15px; padding: 10px; background: rgba(99, 102, 241, 0.1); border-radius: 8px;">
+                    <input type="checkbox" id="enableML" name="enable_ml">
+                    <label for="enableML" style="font-weight: 600;">Enable ML Regression Analysis</label>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="regressionCsvDir">CSV Directory:</label>
+                        <div class="folder-input-wrapper" onclick="browseDirectory('regressionCsvDir')">
+                            <i class="fas fa-folder-open folder-icon"></i>
+                            <input type="text" id="regressionCsvDir" name="csv_directory"
+                                placeholder="Click to select folder" readonly class="folder-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="regressionOutputDir">Output Directory:</label>
+                        <div class="folder-input-wrapper" onclick="browseDirectory('regressionOutputDir')">
+                            <i class="fas fa-folder-open folder-icon"></i>
+                            <input type="text" id="regressionOutputDir" name="output_directory"
+                                placeholder="Click to select folder" readonly class="folder-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="regressionTarget">Target Variable:</label>
+                        <input type="text" id="regressionTarget" name="target" placeholder="e.g., delivery_prob">
+                    </div>
+                    <div class="form-group">
+                        <label for="regressionSelectionMode">Selection Mode:</label>
+                        <select id="regressionSelectionMode" name="selection_mode">
+                            <option value="manual">Manual</option>
+                            <option value="auto">Auto</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="regressionPredictors">Predictor Variables:</label>
+                    <input id="regressionPredictors" name="predictors" placeholder="Select or type predictor variables">
+                </div>
+
+                <div class="form-group">
+                    <label for="regressionExclude">Exclude Variables:</label>
+                    <input id="regressionExclude" name="exclude"
+                        placeholder="Variables to exclude (e.g., seed, run_id)">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="regressionTrainSize">Train Size (0-1):</label>
+                        <input type="number" id="regressionTrainSize" name="train_size" step="0.05" min="0.1" max="0.95"
+                            value="0.75">
+                    </div>
+                    <div class="form-group">
+                        <label for="regressionRandomState">Random State:</label>
+                        <input type="number" id="regressionRandomState" name="random_state" min="0" value="5">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="enabledModelsTagify">Enabled Models:</label>
+                    <input id="enabledModelsTagify" name="enabled_models" placeholder="Select models to enable">
+                </div>
+
+                <div class="form-row">
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="regressionNormalize" name="normalize" checked>
+                        <label for="regressionNormalize">Normalize Features</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="polyEnabled" name="polynomial_enabled" checked>
+                        <label for="polyEnabled">Polynomial Features</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="regressionCVEnabled" name="cv_enabled" checked>
+                        <label for="regressionCVEnabled">Cross Validation</label>
+                    </div>
+                </div>
+
+                <!-- Advanced Regression Settings -->
+                <details class="advanced-settings">
+                    <summary><i class="fas fa-cog"></i> Advanced Settings</summary>
+                    <div class="advanced-content">
+                        <h4 style="margin: 15px 0 10px;">Polynomial Features</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="polyDegree">Degree:</label>
+                                <input type="number" id="polyDegree" name="poly_degree" value="2" min="1" max="5">
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="polyInteractionOnly" name="poly_interaction_only" checked>
+                                <label for="polyInteractionOnly">Interaction Only</label>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="polyIncludeBias" name="poly_include_bias">
+                                <label for="polyIncludeBias">Include Bias</label>
+                            </div>
+                        </div>
+
+                        <h4 style="margin: 15px 0 10px;">Cross Validation</h4>
+                        <div class="form-group">
+                            <label for="regressionCVFolds">Number of Folds:</label>
+                            <input type="number" id="regressionCVFolds" name="cv_folds" value="5" min="2" max="20">
+                        </div>
+
+                        <h4 style="margin: 15px 0 10px;">Model Parameters</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="knnNeighbors">KNN Neighbors:</label>
+                                <input type="number" id="knnNeighbors" name="knn_neighbors" value="6" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="dtMaxDepth">Decision Tree Max Depth:</label>
+                                <input type="number" id="dtMaxDepth" name="dt_max_depth" placeholder="null = unlimited">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="rfEstimators">Random Forest Estimators:</label>
+                                <input type="number" id="rfEstimators" name="rf_estimators" value="100" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="gbEstimators">Gradient Boosting Estimators:</label>
+                                <input type="number" id="gbEstimators" name="gb_estimators" value="100" min="1">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="gbLearningRate">GB Learning Rate:</label>
+                                <input type="number" id="gbLearningRate" name="gb_learning_rate" value="0.1" step="0.01"
+                                    min="0.01" max="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="gbMaxDepth">GB Max Depth:</label>
+                                <input type="number" id="gbMaxDepth" name="gb_max_depth" value="3" min="1">
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </form>
+        </fieldset>
+
+        <div class="form-row" style="margin-top: 20px; gap: 10px;">
+            <button type="button" class="add-button" style="flex: 1; padding: 12px;"
+                onclick="saveAllPostProcessingConfigs()">
+                <i class="fas fa-save"></i> Save All Configs</button>
+            <button type="button" class="edit-button" style="flex: 1; padding: 12px;" onclick="processData()">
+                <i class="fas fa-cogs"></i> Process Data</button>
+        </div>
+    </div>
+
+    <script src="/GUI/config.js"></script>
+
+    <!-- WKT Form JavaScript -->
+    <script>
+        // Auto-generate filename from location
+        document.getElementById('wkt_location').addEventListener('input', function () {
+            const location = this.value.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_');
+            if (location) {
+                document.getElementById('wkt_output_name').value = location;
+            }
+        });
+
+        // Test location availability
+        document.getElementById('wktTestLocation').addEventListener('click', function () {
+            const location = document.getElementById('wkt_location').value.trim();
+            const statusDiv = document.getElementById('wktLocationStatus');
+            const button = this;
+
+            if (!location) {
+                statusDiv.innerHTML = 'Please enter a location first';
+                statusDiv.className = 'alert alert-warning';
+                statusDiv.style.display = 'block';
+                return;
+            }
+
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+            statusDiv.style.display = 'none';
+
+            fetch('http://localhost:5000/test_city', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ city_name: location })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    statusDiv.innerHTML = data.message;
+                    statusDiv.className = 'alert ' + (data.available ? 'alert-success' : 'alert-warning');
+                    statusDiv.style.display = 'block';
+                })
+                .catch(error => {
+                    statusDiv.innerHTML = 'Error testing location';
+                    statusDiv.className = 'alert alert-danger';
+                    statusDiv.style.display = 'block';
+                })
+                .finally(() => {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-search"></i> Test';
+                });
+        });
+
+        // Form validation
+        document.getElementById('wktMapForm').addEventListener('submit', function (e) {
+            const location = document.getElementById('wkt_location').value.trim();
+            const outputName = document.getElementById('wkt_output_name').value.trim();
+
+            if (!location) {
+                e.preventDefault();
+                alert('Please enter a location');
+                return;
+            }
+
+            if (!outputName || !/^[a-zA-Z0-9_-]+$/.test(outputName)) {
+                e.preventDefault();
+                alert('Please enter a valid filename (letters, numbers, underscores, and hyphens only)');
+                return;
+            }
+        });
+    </script>
+</body>
+
+</html>

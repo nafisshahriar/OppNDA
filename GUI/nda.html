@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results</title>
+    <link rel="stylesheet" href="/GUI/nda.css">
+    <link rel="icon" href="/GUI/images/oppnda_logo.png" type="image/png">
+</head>
+<body>
+    <div class="nda-container">
+        <h2>Analysis Results</h2>
+        <div class="plot-grid">
+            {% for img_url in img_urls %}
+            <div class="plot-card">
+                <img src="{{ img_url }}" class="plot-img" onclick="zoomPlot({{ loop.index0 }})">
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="plotModal" class="modal" onclick="closeModal(event)">
+        <button class="modal-nav-btn modal-prev" onclick="event.stopPropagation(); prevPlot();">
+            <span class="arrow">
+                <svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+        </button>
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal(event)">&times;</button>
+            <img id="modalImg" src="" onclick="toggleEnlarge(event)">
+        </div>
+        <button class="modal-nav-btn modal-next" onclick="event.stopPropagation(); nextPlot();">
+            <span class="arrow">
+                <svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+        </button>
+    </div>
+
+    <script>
+        const imgList = {{ img_urls | tojson }};
+        let currentIdx = 0;
+        let enlarged = false;
+        let imgOffset = {x: 0, y: 0};
+        let isDragging = false, lastX = 0, lastY = 0, velocity = {x: 0, y: 0}, animationFrame;
+
+        function zoomPlot(idx) {
+            currentIdx = idx;
+            const modal = document.getElementById('plotModal');
+            const modalImg = document.getElementById('modalImg');
+            modalImg.src = imgList[idx];
+            modalImg.classList.remove('enlarged');
+            modalImg.style.transform = '';
+            imgOffset = {x: 0, y: 0};
+            enlarged = false;
+            modal.style.display = 'flex';
+        }
+
+        function closeModal(e) {
+            if (e.target.classList.contains('modal') || e.target.classList.contains('close-modal')) {
+                document.getElementById('plotModal').style.display = 'none';
+                document.getElementById('modalImg').src = '';
+                document.getElementById('modalImg').classList.remove('enlarged');
+                document.getElementById('modalImg').style.transform = '';
+                enlarged = false;
+                imgOffset = {x: 0, y: 0};
+            }
+        }
+
+        function prevPlot() {
+            currentIdx = (currentIdx - 1 + imgList.length) % imgList.length;
+            const modalImg = document.getElementById('modalImg');
+            modalImg.src = imgList[currentIdx];
+            modalImg.classList.remove('enlarged');
+            modalImg.style.transform = '';
+            enlarged = false;
+            imgOffset = {x: 0, y: 0};
+        }
+
+        function nextPlot() {
+            currentIdx = (currentIdx + 1) % imgList.length;
+            const modalImg = document.getElementById('modalImg');
+            modalImg.src = imgList[currentIdx];
+            modalImg.classList.remove('enlarged');
+            modalImg.style.transform = '';
+            enlarged = false;
+            imgOffset = {x: 0, y: 0};
+        }
+
+        function toggleEnlarge(e) {
+            const img = e.target;
+            enlarged = !enlarged;
+            if (enlarged) {
+                img.classList.add('enlarged');
+                img.style.cursor = 'grab';
+                imgOffset = {x: 0, y: 0};
+                img.style.transform = 'scale(1.8)';
+            } else {
+                img.classList.remove('enlarged');
+                img.style.cursor = 'zoom-in';
+                img.style.transform = '';
+                imgOffset = {x: 0, y: 0};
+            }
+        }
+
+        // Smoother drag feature when enlarged
+        const modalImg = document.getElementById('modalImg');
+        modalImg.addEventListener('mousedown', function(e) {
+            if (!enlarged) return;
+            isDragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            modalImg.style.cursor = 'grabbing';
+            cancelAnimationFrame(animationFrame);
+        });
+
+        window.addEventListener('mousemove', function(e) {
+            if (isDragging && enlarged) {
+                let dx = e.clientX - lastX;
+                let dy = e.clientY - lastY;
+                imgOffset.x += dx;
+                imgOffset.y += dy;
+                velocity.x = dx;
+                velocity.y = dy;
+                modalImg.style.transform = `scale(1.8) translate(${imgOffset.x}px, ${imgOffset.y}px)`;
+                lastX = e.clientX;
+                lastY = e.clientY;
+            }
+        });
+
+        window.addEventListener('mouseup', function(e) {
+            if (isDragging) {
+                isDragging = false;
+                if (enlarged) modalImg.style.cursor = 'grab';
+                // Inertia effect
+                function inertia() {
+                    velocity.x *= 0.92;
+                    velocity.y *= 0.92;
+                    imgOffset.x += velocity.x;
+                    imgOffset.y += velocity.y;
+                    modalImg.style.transform = `scale(1.8) translate(${imgOffset.x}px, ${imgOffset.y}px)`;
+                    if (Math.abs(velocity.x) > 0.5 || Math.abs(velocity.y) > 0.5) {
+                        animationFrame = requestAnimationFrame(inertia);
+                    }
+                }
+                inertia();
+            }
+        });
+
+        // Touch support for mobile
+        modalImg.addEventListener('touchstart', function(e) {
+            if (!enlarged) return;
+            isDragging = true;
+            lastX = e.touches[0].clientX;
+            lastY = e.touches[0].clientY;
+            cancelAnimationFrame(animationFrame);
+        });
+
+        window.addEventListener('touchmove', function(e) {
+            if (isDragging && enlarged && e.touches.length === 1) {
+                let dx = e.touches[0].clientX - lastX;
+                let dy = e.touches[0].clientY - lastY;
+                imgOffset.x += dx;
+                imgOffset.y += dy;
+                velocity.x = dx;
+                velocity.y = dy;
+                modalImg.style.transform = `scale(1.8) translate(${imgOffset.x}px, ${imgOffset.y}px)`;
+                lastX = e.touches[0].clientX;
+                lastY = e.touches[0].clientY;
+            }
+        });
+
+        window.addEventListener('touchend', function(e) {
+            if (isDragging) {
+                isDragging = false;
+                function inertia() {
+                    velocity.x *= 0.92;
+                    velocity.y *= 0.92;
+                    imgOffset.x += velocity.x;
+                    imgOffset.y += velocity.y;
+                    modalImg.style.transform = `scale(1.8) translate(${imgOffset.x}px, ${imgOffset.y}px)`;
+                    if (Math.abs(velocity.x) > 0.5 || Math.abs(velocity.y) > 0.5) {
+                        animationFrame = requestAnimationFrame(inertia);
+                    }
+                }
+                inertia();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById('plotModal');
+            if (modal.style.display === 'flex') {
+                if (e.key === 'Escape') closeModal({target: {classList: {contains: () => true}}});
+                if (e.key === 'ArrowLeft') prevPlot();
+                if (e.key === 'ArrowRight') nextPlot();
+                if (e.key === ' ' || e.key === 'Enter') toggleEnlarge({target: document.getElementById('modalImg')});
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+{
+    "folder": "raw_reports",
+    "file_filter": {
+        "extension": ".txt",
+        "contains": ""
+    },
+    "report_types": [
+        "MessageStatsReport",
+        "CCNApplicationReport"
+    ],
+    "filename_pattern": {
+        "delimiter": "_",
+        "components": {
+            "prefix": 0,
+            "router": 1,
+            "seed": 2,
+            "ttl": 3,
+            "buffer": 4,
+            "report_type": 5
+        },
+        "extract": {
+            "buffer": "(\\d+)"
+        }
+    },
+    "data_separator": ":",
+    "ignore_fields": [
+        "sim_time",
+        "started"
+    ],
+    "average_groups": [
+        "router",
+        "ttl",
+        "buffer"
+    ],
+    "output": {
+        "precision": 4
+    }
+}
