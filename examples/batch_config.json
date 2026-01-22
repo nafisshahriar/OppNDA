@@ -1,0 +1,53 @@
+{
+  "folder": "reportQP",
+  
+  "file_filter": {
+    "extension": ".txt",
+    "contains": "CCNApplicationReport"
+  },
+  
+  "filename_pattern": {
+    "delimiter": "_",
+    "components": {
+      "prefix": 0,
+      "router": 1,
+      "seed": 2,
+      "ttl": 3,
+      "buffer": 4,
+      "distro": 5,
+      "report_type": 6
+    },
+    "extract": {
+      "buffer": "(\\d+)"
+    }
+  },
+  
+  "data_separator": ":",
+  
+  "ignore_fields": ["sim_time"],
+  
+  "average_groups": [
+    {
+      "name": "By ttl",
+      "group_by": ["router", "ttl"],
+      "min_files": 2,
+      "output_template": "{report_type}_{router}_{ttl}_ttl_average.txt"
+    },
+    {
+      "name": "By Buffer",
+      "group_by": ["router", "buffer"],
+      "min_files": 2,
+      "output_template": "{report_type}_{router}_{buffer}_buffer_average.txt"
+    },
+    {
+      "name": "By Ditro",
+      "group_by": ["router", "distro"],
+      "min_files": 2,
+      "output_template": "{report_type}_{router}_{distro}_distro_average.txt"
+    }
+  ],
+  
+  "output": {
+    "precision": 4
+  }
+}

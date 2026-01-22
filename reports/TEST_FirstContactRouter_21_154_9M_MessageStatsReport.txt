@@ -1,0 +1,20 @@
+Message stats for scenario TEST_FirstContactRouter_21_154_9M
+sim_time: 604800.0999
+created: 20503
+started: 597268
+relayed: 258138
+aborted: 339126
+dropped: 15435
+removed: 258138
+delivered: 4806
+delivery_prob: 0.2344
+response_prob: 0.0000
+overhead_ratio: 52.7116
+latency_avg: 4367.6495
+latency_med: 4264.1000
+hopcount_avg: 8.5266
+hopcount_med: 8
+buffertime_avg: 587.9536
+buffertime_med: 330.6000
+rtt_avg: NaN
+rtt_med: NaN

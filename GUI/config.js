@@ -2196,7 +2196,7 @@ GUI.EventLogPanel.nrofEvents = ${eventLogPanelNrofEvents}
 
 // Tagify instances for post-processing fields
 let metricsIncludeTagify, metricsIgnoreTagify, enabledPlotsTagify, predictorsTagify, enabledModelsTagify;
-let reportTypesTagify, batchIgnoreFieldsTagify, regressionExcludeTagify;
+let reportTypesTagify, batchIgnoreFieldsTagify, regressionExcludeTagify, regressionTargetTagify;
 
 // Available options for Tagify dropdowns
 const AVAILABLE_METRICS = [
@@ -2241,6 +2241,8 @@ function initPostProcessingTagify() {
                 closeOnSelect: false
             }
         });
+        // Set default metrics
+        metricsIncludeTagify.addTags(['delivery_prob', 'hopcount_avg', 'latency_avg', 'buffertime_avg', 'overhead_ratio']);
     }
 
     // Metrics to Ignore
@@ -2269,6 +2271,8 @@ function initPostProcessingTagify() {
                 closeOnSelect: false
             }
         });
+        // Set default value
+        reportTypesTagify.addTags(['MessageStatsReport']);
     }
 
     // Enabled Plots
@@ -2311,6 +2315,22 @@ function initPostProcessingTagify() {
                 closeOnSelect: false
             }
         });
+    }
+
+    // Target Variable(s) - supports multiple targets for separate analyses
+    const targetInput = document.getElementById('regressionTarget');
+    if (targetInput && !regressionTargetTagify) {
+        regressionTargetTagify = new Tagify(targetInput, {
+            whitelist: AVAILABLE_METRICS,
+            enforceWhitelist: false,
+            dropdown: {
+                maxItems: 15,
+                enabled: 0,
+                closeOnSelect: false
+            }
+        });
+        // Set default value
+        regressionTargetTagify.addTags(['delivery_prob']);
     }
 
     // Exclude Variables

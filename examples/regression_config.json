@@ -1,0 +1,103 @@
+{
+  "input": {
+    "csv_directory": "plots",
+    "mode": "all", 
+    "active_files": [] 
+  },
+  
+  "features": {
+    "target": "delivery_prob",
+    "selection_mode": "manual", 
+    "predictors": [
+      "BufferSize",
+      "TTL",
+      "overhead_ratio",
+      "buffertime_avg",
+      "latency_avg",
+      "hopcount_avg"
+    ],
+    "exclude": ["seed", "run_id"],
+    "normalize": true,
+    "polynomial_features": {
+        "enabled": true,
+        "degree": 2,
+        "interaction_only": true,
+        "include_bias": false
+    }
+  },
+  
+  "model_settings": {
+    "split_settings": {
+      "train_size": 0.75,
+      "random_state": 5
+    },
+    "cross_validation": {
+        "enabled": true,
+        "folds": 5
+    },
+    
+    "enabled_models": {
+      "Linear Regression": true,
+      "Ridge Regression": false,
+      "Lasso Regression": false,
+      "Decision Tree": true,
+      "Random Forest": true,
+      "Gradient Boosting": true,
+      "KNN": true
+    },
+    
+    "parameters": {
+      "KNN": {
+        "n_neighbors": 6
+      },
+      "Decision Tree": {
+        "max_depth": null,
+        "min_samples_split": 2
+      },
+      "Random Forest": {
+        "n_estimators": 100,
+        "max_depth": null
+      },
+      "Gradient Boosting": {
+        "n_estimators": 100,
+        "learning_rate": 0.1,
+        "max_depth": 3
+      }
+    }
+  },
+  
+  "output": {
+    "directory": "regression_results"
+  },
+  
+  "plot_settings": {
+    "figure": {
+        "size": [18, 7],
+        "dpi": 200
+    },
+    "styles": {
+        "colors": {
+            "residual_scatter": "#1f77b4",
+            "actual_predicted": "#2ca02c",
+            "residual_hist": "#ff7f0e",
+            "line": "red",
+            "edge": "white"
+        },
+        "scatter": {
+            "s": 80,
+            "alpha": 0.7
+        },
+        "fonts": {
+            "axis_label": 18,
+            "tick_label": 15,
+            "legend": 14,
+            "title": 24
+        },
+        "grid": {
+            "style": ":",
+            "width": 0.8,
+            "alpha": 0.7
+        }
+    }
+  }
+}

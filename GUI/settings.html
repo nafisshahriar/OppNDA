@@ -1472,14 +1472,14 @@
             </form>
         </fieldset>
 
-        <!-- Regression Config Section (THIRD) -->
+        <!-- Machine Learning Config Section -->
         <fieldset id="regressionConfigSection">
-            <legend><i class="fas fa-brain"></i> Regression Configuration</legend>
+            <legend><i class="fas fa-brain"></i> Machine Learning Configuration</legend>
             <form id="regressionConfigForm">
                 <div class="checkbox-container"
                     style="margin-bottom: 15px; padding: 10px; background: rgba(99, 102, 241, 0.1); border-radius: 8px;">
                     <input type="checkbox" id="enableML" name="enable_ml">
-                    <label for="enableML" style="font-weight: 600;">Enable ML Regression Analysis</label>
+                    <label for="enableML" style="font-weight: 600;">Enable Machine Learning Analysis</label>
                     <p style="margin: 8px 0 0 24px; font-size: 12px; color: #64748b;">
                         <i class="fas fa-info-circle"></i> Uses CSV files from the Output Plots folder above
                     </p>
@@ -1489,81 +1489,84 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="regressionOutputDir" data-tooltip="Where to save regression analysis results">
+                        <label for="regressionOutputDir"
+                            data-tooltip="Directory where ML analysis results and plots will be saved">
                             Results Folder:
                         </label>
-                        <div style="display: flex; gap: 8px;">
-                            <select onchange="applyFolderPreset('regressionOutputDir', this.value)"
-                                style="width: 140px; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
-                                <option value="">Custom...</option>
-                                <option value="regression_results/" selected>regression_results/</option>
-                                <option value="ml_output/">ml_output/</option>
-                                <option value="plots/regression/">plots/regression/</option>
-                            </select>
-                            <input type="text" id="regressionOutputDir" name="output_directory"
-                                value="regression_results/" placeholder="e.g., regression_results/" style="flex: 1;">
-                        </div>
+                        <input type="text" id="regressionOutputDir" name="output_directory" value="regression_results/"
+                            placeholder="e.g., regression_results/ or C:\ml_results">
                     </div>
                     <div class="form-group">
                         <label for="regressionTarget"
-                            data-tooltip="The metric you want to predict (e.g., delivery_prob)">
-                            Target Variable:
+                            data-tooltip="Target variable(s) to predict. Add multiple targets to run separate analyses for each.">
+                            Target Variable(s):
                         </label>
-                        <input type="text" id="regressionTarget" name="target" value="delivery_prob"
-                            placeholder="e.g., delivery_prob">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="regressionSelectionMode">Selection Mode:</label>
-                        <select id="regressionSelectionMode" name="selection_mode">
-                            <option value="manual">Manual</option>
-                            <option value="auto">Auto</option>
-                        </select>
+                        <input id="regressionTarget" name="target" placeholder="Select or type target metrics">
+                        <p style="margin: 5px 0 0 0; font-size: 11px; color: #64748b;">
+                            <i class="fas fa-lightbulb" style="color: #f59e0b;"></i>
+                            Multiple targets will generate separate results for each
+                        </p>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="regressionPredictors">Predictor Variables:</label>
-                    <input id="regressionPredictors" name="predictors" placeholder="Select or type predictor variables">
+                    <label for="regressionPredictors"
+                        data-tooltip="Features used for prediction. Leave empty to auto-select all numeric columns.">
+                        Predictor Variables:
+                    </label>
+                    <input id="regressionPredictors" name="predictors" placeholder="Leave empty for auto-selection">
                 </div>
 
                 <div class="form-group">
-                    <label for="regressionExclude">Exclude Variables:</label>
+                    <label for="regressionExclude"
+                        data-tooltip="Variables to exclude from auto-selection during prediction (e.g., identifiers like seed, run_id)">
+                        Exclude Variables:
+                    </label>
                     <input id="regressionExclude" name="exclude"
                         placeholder="Variables to exclude (e.g., seed, run_id)">
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="regressionTrainSize">Train Size (0-1):</label>
+                        <label for="regressionTrainSize"
+                            data-tooltip="Fraction of data for training. 0.75 = 75% train, 25% test. Higher = more training data.">Train
+                            Size (0-1):</label>
                         <input type="number" id="regressionTrainSize" name="train_size" step="0.05" min="0.1" max="0.95"
                             value="0.75">
                     </div>
                     <div class="form-group">
-                        <label for="regressionRandomState">Random State:</label>
+                        <label for="regressionRandomState"
+                            data-tooltip="Seed for reproducibility. Use the same value to get identical results across runs.">Random
+                            State:</label>
                         <input type="number" id="regressionRandomState" name="random_state" min="0" value="5">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="enabledModelsTagify">Enabled Models:</label>
+                    <label for="enabledModelsTagify"
+                        data-tooltip="Machine learning algorithms to train and compare. Multiple models will show performance comparison.">Enabled
+                        Models:</label>
                     <input id="enabledModelsTagify" name="enabled_models" placeholder="Select models to enable">
                 </div>
 
                 <div class="form-row">
                     <div class="checkbox-container">
                         <input type="checkbox" id="regressionNormalize" name="normalize" checked>
-                        <label for="regressionNormalize">Normalize Features</label>
+                        <label for="regressionNormalize"
+                            data-tooltip="Scale features to have mean=0, std=1. Recommended for most algorithms.">Normalize
+                            Features</label>
                     </div>
                     <div class="checkbox-container">
                         <input type="checkbox" id="polyEnabled" name="polynomial_enabled" checked>
-                        <label for="polyEnabled">Polynomial Features</label>
+                        <label for="polyEnabled"
+                            data-tooltip="Create interaction terms between features (e.g., TTL × Buffer). May improve accuracy.">Polynomial
+                            Features</label>
                     </div>
                     <div class="checkbox-container">
                         <input type="checkbox" id="regressionCVEnabled" name="cv_enabled" checked>
-                        <label for="regressionCVEnabled">Cross Validation</label>
+                        <label for="regressionCVEnabled"
+                            data-tooltip="Use k-fold cross-validation for more robust model evaluation and reduce overfitting.">Cross
+                            Validation</label>
                     </div>
                 </div>
 

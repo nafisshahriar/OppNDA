@@ -1,0 +1,20 @@
+Message stats for scenario TEST_EpidemicRouter_32_133_5M
+sim_time: 604800.0999
+created: 20503
+started: 795151
+relayed: 407322
+aborted: 387828
+dropped: 420996
+removed: 0
+delivered: 6054
+delivery_prob: 0.2953
+response_prob: 0.0000
+overhead_ratio: 66.2815
+latency_avg: 3553.6023
+latency_med: 3386.0000
+hopcount_avg: 4.1435
+hopcount_med: 4
+buffertime_avg: 1223.9012
+buffertime_med: 861.0000
+rtt_avg: NaN
+rtt_med: NaN

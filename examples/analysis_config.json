@@ -1,0 +1,149 @@
+{
+  "directories": {
+    "report_dir": "reportQP",
+    "plots_dir": "plots"
+  },
+  
+  "data_separator": ":",
+  
+  "file_patterns": {
+    "report_extension": ".txt"
+  },
+  
+  "report_types": [
+    "CCNApplicationReport"
+  ],
+  
+  "filename_structure": {
+    "delimiter": "_",
+    "average_files": {
+      "report_type_position": 0,
+      "router_position": 1,
+      "grouping_type_position": -1,
+      "value_positions": [2]
+    },
+    "raw_files": {
+      "positions": {
+        "prefix": 0,
+        "router": 1,
+        "seed": 2,
+        "ttl": 3,
+        "buffer": 4,
+        "distro": 5,
+        "report_type": 6
+      }
+    }
+  },
+  
+  "grouping_labels": {
+    "ttl": "TTL (seconds)",
+    "buffer": "Buffer Size (MB)",
+    "timeout": "Timeout (seconds)",
+    "distro": "Query Distribution",
+    "default": "Parameter Value"
+  },
+  
+  "metrics": {
+    "include": [
+      "oppo_cahce_hit",
+      "static_cache_hit",
+      "drop_pit",
+      "duplicated_query"
+
+    ],
+    "ignore": [
+      "sim_time",
+      "rtt_avg",
+      "rtt_med"
+    ]
+  },
+  
+  "plot_thresholds": {
+    "min_values_for_line": 2,
+    "min_values_for_surface": 3,
+    "min_files_for_heatmap": 2
+  },
+  
+  "plot_settings": {
+    "3d_surface": {
+      "size": [18, 12],
+      "font_sizes": {
+        "axis_label": 30,
+        "ticks": 25,
+        "colorbar": 30
+      },
+      "style": {
+        "cmap": "flare",
+        "edge_color": "black",
+        "line_width": 1.5,
+        "alpha": 0.92
+      },
+      "view": {
+        "elev": 30,
+        "azim": 140
+      }
+    },
+    "line_plots": {
+      "size": [10, 6],
+      "font_sizes": {
+        "axis_label": 20,
+        "ticks": 19,
+        "legend": 16
+      },
+      "markers": ["o", "s", "^", "D", "v", "*", "P", "X"],
+      "marker_size": 17
+    },
+    "violin_plots": {
+      "size": [35, 21],
+      "font_sizes": {
+        "axis_label": 70,
+        "ticks": 70
+      },
+      "style": {
+        "inner": "quartile",
+        "line_width": 5,
+        "width": 0.9,
+        "gap": 0.1,
+        "quartile_line_width": 8.5,
+        "palette": "Spectral"
+      }
+    },
+    "heatmaps": {
+      "font_sizes": {
+        "annotations": 30,
+        "ticks": 20,
+        "colorbar": 20
+      },
+      "style": {
+        "cmap": "Blues",
+        "vmin": -1,
+        "vmax": 1
+      }
+    },
+    "pairplot": {
+      "size": [26, 26],
+      "font_sizes": {
+        "axis_label": 13,
+        "ticks": 12,
+        "legend": 13
+      },
+      "style": {
+        "diag_kind": "kde",
+        "palette": "icefire",
+        "alpha": 1,
+        "marker_size": 60,
+        "edge_color": "white",
+        "edge_width": 0.5
+      }
+    }
+  },
+  
+  "enabled_plots": {
+    "3d_surface": true,
+    "line_plots": true,
+    "violin_plots": true,
+    "heatmaps": true,
+    "pairplot": true,
+    "export_csv": true
+  }
+}

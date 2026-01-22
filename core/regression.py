@@ -62,8 +62,13 @@ class DataProcessor:
             
         return [os.path.join(csv_dir, f) for f in files]
 
-    def load_and_clean(self, filepath):
-        """Load data and return X, y (Unscaled - Scaling happens in Pipeline)"""
+    def load_and_clean(self, filepath, target=None):
+        """Load data and return X, y (Unscaled - Scaling happens in Pipeline)
+        
+        Args:
+            filepath: Path to CSV file
+            target: Target variable to predict (overrides config if provided)
+        """
         try:
             df = pd.read_csv(filepath)
         except Exception as e:
@@ -71,23 +76,30 @@ class DataProcessor:
             return None, None, None
 
         feat_config = self.config['features']
-        target = feat_config['target']
+        # Use provided target or fall back to config
+        if target is None:
+            target = feat_config.get('target', feat_config.get('targets', ['delivery_prob'])[0])
         
         if target not in df.columns:
+            print(f"    Target '{target}' not found in columns")
             return None, None, None
 
         # 1. Basic Cleaning (NaN/Inf removal)
         df = df.replace([np.inf, -np.inf], np.nan).dropna(subset=[target])
         
-        # 2. Feature Selection
+        # 2. Feature Selection - default to 'auto' mode
         all_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-        if feat_config['selection_mode'] == 'auto':
-            predictors = [c for c in all_cols if c != target]
-        elif feat_config['selection_mode'] == 'exclude':
+        selection_mode = feat_config.get('selection_mode', 'auto')
+        predictors_config = feat_config.get('predictors', [])
+        
+        if selection_mode == 'auto' or not predictors_config:
+            exclude = feat_config.get('exclude', []) + [target]
+            predictors = [c for c in all_cols if c not in exclude]
+        elif selection_mode == 'exclude':
             exclude = feat_config.get('exclude', []) + [target]
             predictors = [c for c in all_cols if c not in exclude]
         else: 
-            desired = feat_config['predictors']
+            desired = predictors_config
             predictors = [c for c in desired if c in df.columns and c != target]
 
         if not predictors:
@@ -283,94 +295,110 @@ if __name__ == "__main__":
     out_dir = config['output']['directory']
     os.makedirs(out_dir, exist_ok=True)
     
-    print(f"Found {len(files)} datasets. Starting Analysis...")
+    # Get targets - supports both single 'target' and multiple 'targets'
+    feat_config = config['features']
+    targets = feat_config.get('targets', [])
+    if not targets and 'target' in feat_config:
+        targets = [feat_config['target']]
+    if not targets:
+        targets = ['delivery_prob']  # Default target
+    
+    print(f"Found {len(files)} datasets. Analyzing {len(targets)} target(s): {targets}")
     
     for filepath in files:
         router_name = os.path.basename(filepath).replace("_metrics.csv", "")
-        print(f"\n{'='*40}\nAnalyzing: {router_name}\n{'='*40}")
         
-        X, y, predictors = processor.load_and_clean(filepath)
-        
-        if X is None:
-            print("Skipping: Invalid data.")
-            continue
+        for target in targets:
+            print(f"\n{'='*50}")
+            print(f"Dataset: {router_name} | Target: {target}")
+            print(f"{'='*50}")
             
-        # Config Checks
-        poly_enabled = config['features'].get('polynomial_features', {}).get('enabled', False)
-        if poly_enabled:
-            print(f"Feature Mode: Polynomial Interactions (Degree {config['features']['polynomial_features']['degree']})")
-        else:
-            print("Feature Mode: Standard")
+            X, y, predictors = processor.load_and_clean(filepath, target=target)
+            
+            if X is None:
+                print(f"Skipping {target}: Invalid data or target not found.")
+                continue
+            
+            # Config Checks
+            poly_enabled = config['features'].get('polynomial_features', {}).get('enabled', False)
+            if poly_enabled:
+                print(f"Feature Mode: Polynomial Interactions (Degree {config['features']['polynomial_features']['degree']})")
+            else:
+                print("Feature Mode: Standard")
 
-        # Split Data
-        split_cfg = config['model_settings']['split_settings']
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, 
-            train_size=split_cfg['train_size'],
-            random_state=split_cfg['random_state']
-        )
-        
-        base_models = get_base_models(config)
-        results = []
-        
-        cv_config = config['model_settings'].get('cross_validation', {})
-        cv_enabled = cv_config.get('enabled', False)
-        
-        for name, base_model in base_models.items():
-            print(f"--> Processing {name}...")
+            # Split Data
+            split_cfg = config['model_settings']['split_settings']
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, 
+                train_size=split_cfg['train_size'],
+                random_state=split_cfg['random_state']
+            )
             
-            # Create Pipeline (Suggestion 3)
-            pipeline = create_pipeline(base_model, config)
+            base_models = get_base_models(config)
+            results = []
             
-            try:
-                # 1. Cross-Validation (Suggestion 4)
-                cv_score_str = "N/A"
-                if cv_enabled:
-                    folds = cv_config.get('folds', 5)
-                    # Note: Pipeline handles scaling for each fold automatically
-                    cv_scores = cross_val_score(pipeline, X_train, y_train, cv=folds, scoring='r2')
-                    cv_mean = cv_scores.mean()
-                    cv_std = cv_scores.std()
-                    cv_score_str = f"{cv_mean:.4f} (±{cv_std*2:.4f})"
-                    print(f"    CV Score (R²): {cv_score_str}")
+            cv_config = config['model_settings'].get('cross_validation', {})
+            cv_enabled = cv_config.get('enabled', False)
+            
+            # Output path includes target for multi-target support
+            target_out_dir = os.path.join(out_dir, f"{router_name}_{target}")
+            
+            for name, base_model in base_models.items():
+                print(f"--> Processing {name}...")
                 
-                # 2. Final Fit on Training Data
-                pipeline.fit(X_train, y_train)
+                # Create Pipeline
+                pipeline = create_pipeline(base_model, config)
                 
-                # 3. Evaluation on Test Data
-                y_pred = pipeline.predict(X_test)
+                try:
+                    # 1. Cross-Validation
+                    cv_score_str = "N/A"
+                    if cv_enabled:
+                        folds = cv_config.get('folds', 5)
+                        cv_scores = cross_val_score(pipeline, X_train, y_train, cv=folds, scoring='r2')
+                        cv_mean = cv_scores.mean()
+                        cv_std = cv_scores.std()
+                        cv_score_str = f"{cv_mean:.4f} (±{cv_std*2:.4f})"
+                        print(f"    CV Score (R²): {cv_score_str}")
+                    
+                    # 2. Final Fit on Training Data
+                    pipeline.fit(X_train, y_train)
+                    
+                    # 3. Evaluation on Test Data
+                    y_pred = pipeline.predict(X_test)
+                    
+                    # Handle Infinite Preds
+                    mask = np.isfinite(y_pred)
+                    if not mask.all():
+                        y_pred[~mask] = np.mean(y_train)
+                    
+                    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+                    mae = mean_absolute_error(y_test, y_pred)
+                    r2 = r2_score(y_test, y_pred)
+                    
+                    results.append({
+                        "Model": name,
+                        "Target": target,
+                        "CV R2 (Mean)": cv_score_str,
+                        "Test R2": r2,
+                        "Test RMSE": rmse,
+                        "Test MAE": mae
+                    })
+                    
+                    # 4. Plots - use target-specific output directory
+                    os.makedirs(target_out_dir, exist_ok=True)
+                    plot_results(y_test, y_pred, name, "", target_out_dir, config)
+                    plot_importance(pipeline, predictors, name, "", target_out_dir, config)
+                    
+                except Exception as e:
+                    print(f"    Error: {e}")
+                    # import traceback
+                    # traceback.print_exc()
                 
-                # Handle Infinite Preds
-                mask = np.isfinite(y_pred)
-                if not mask.all():
-                    y_pred[~mask] = np.mean(y_train)
-                
-                rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-                mae = mean_absolute_error(y_test, y_pred)
-                r2 = r2_score(y_test, y_pred)
-                
-                results.append({
-                    "Model": name,
-                    "CV R2 (Mean)": cv_score_str,
-                    "Test R2": r2,
-                    "Test RMSE": rmse,
-                    "Test MAE": mae
-                })
-                
-                # 4. Plots
-                plot_results(y_test, y_pred, name, router_name, out_dir, config)
-                plot_importance(pipeline, predictors, name, router_name, out_dir, config)
-                
-            except Exception as e:
-                print(f"    Error: {e}")
-                # import traceback
-                # traceback.print_exc()
-                
-        # Summary
-        if results:
-            res_df = pd.DataFrame(results).sort_values("Test R2", ascending=False)
-            print("\nPerformance Summary:")
-            print(res_df[['Model', 'CV R2 (Mean)', 'Test R2', 'Test RMSE']])
-            res_df.to_csv(os.path.join(out_dir, router_name, "performance_summary.csv"), index=False)
+            # Summary for this target
+            if results:
+                res_df = pd.DataFrame(results).sort_values("Test R2", ascending=False)
+                print(f"\nPerformance Summary for {target}:")
+                print(res_df[['Model', 'Target', 'CV R2 (Mean)', 'Test R2', 'Test RMSE']])
+                res_df.to_csv(os.path.join(target_out_dir, "performance_summary.csv"), index=False)
             
     print(f"\nAnalysis complete. Check '{out_dir}' for results.")

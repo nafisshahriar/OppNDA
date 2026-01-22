@@ -1,0 +1,20 @@
+Message stats for scenario TEST_SprayAndWaitRouter_83_240_5M
+sim_time: 604800.0999
+created: 20503
+started: 296434
+relayed: 109729
+aborted: 186702
+dropped: 119481
+removed: 0
+delivered: 9956
+delivery_prob: 0.4856
+response_prob: 0.0000
+overhead_ratio: 10.0214
+latency_avg: 2951.8311
+latency_med: 2371.2000
+hopcount_avg: 2.1341
+hopcount_med: 2
+buffertime_avg: 4048.6724
+buffertime_med: 3370.7000
+rtt_avg: NaN
+rtt_med: NaN
