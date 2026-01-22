@@ -17,40 +17,161 @@
 
 <body>
 
+    <!-- Quick Start Modal -->
+    <div id="quickStartModal" class="quick-start-modal" onclick="if(event.target === this) closeQuickStart();">
+        <div class="quick-start-content" onclick="event.stopPropagation()">
+            <button class="quick-start-close" onclick="closeQuickStart()">&times;</button>
+            <div class="quick-start-header">
+                <img src="/GUI/images/oppnda_logo.png" alt="OppNDA" style="width: 60px; margin-bottom: 10px;">
+                <h2>Welcome to OppNDA!</h2>
+                <p style="color: #64748b;">Network Data Analyzer for ONE Simulator</p>
+            </div>
 
+            <div class="quick-start-steps">
+                <div class="step-card" onclick="openTab(null, 'ScenarioSettings'); closeQuickStart();">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3><i class="fas fa-cog"></i> Configure</h3>
+                        <p>Set scenario name, nodes, routers, and simulation parameters</p>
+                    </div>
+                </div>
+
+                <div class="step-card" onclick="openTab(null, 'UpdateConfiguration'); closeQuickStart();">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3><i class="fas fa-play"></i> Run</h3>
+                        <p>Execute ONE simulator with your configuration</p>
+                    </div>
+                </div>
+
+                <div class="step-card" onclick="openTab(null, 'DataAnalysis'); closeQuickStart();">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3><i class="fas fa-chart-bar"></i> Analyze</h3>
+                        <p>View plots and compare router performance</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-start-actions">
+                <button class="btn-example" onclick="loadExampleScenario('urban'); closeQuickStart();">
+                    <i class="fas fa-city"></i> Load Urban Example
+                </button>
+                <button class="btn-example" onclick="loadExampleScenario('campus'); closeQuickStart();">
+                    <i class="fas fa-university"></i> Load Campus Example
+                </button>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <label style="color: #64748b; font-size: 13px;">
+                    <input type="checkbox" id="dontShowAgain" style="margin-right: 8px;">
+                    Don't show this again
+                </label>
+            </div>
+        </div>
+    </div>
 
     <div id="tabs">
         <div class="sidebar-logo">
             <img src="/GUI/images/o4.png" alt="Sidebar Logo">
         </div>
-        <button class="tablinks active" onclick="openTab(event, 'ScenarioSettings')">Settings</button>
+
+        <!-- Settings Section with Collapsible Sub-tabs -->
+        <div class="sidebar-section">
+            <button class="section-header active" onclick="toggleSettingsMenu(event)">
+                <i class="fas fa-cog"></i> Settings
+                <i class="fas fa-chevron-down section-chevron"></i>
+            </button>
+            <div class="settings-submenu" id="settingsSubmenu">
+                <button class="tablinks sub-tab active" onclick="openTab(event, 'ScenarioSettings')">
+                    <span class="tab-step">1</span> Scenario
+                </button>
+                <button class="tablinks sub-tab" onclick="openTab(event, 'InterfaceSettings')">
+                    <span class="tab-step">2</span> Interface
+                </button>
+                <button class="tablinks sub-tab" onclick="openTab(event, 'GroupSettings')">
+                    <span class="tab-step">3</span> Nodes
+                </button>
+                <button class="tablinks sub-tab" onclick="openTab(event, 'ReportSettings')">
+                    <span class="tab-step">4</span> Reports
+                </button>
+                <button class="tablinks sub-tab" onclick="openTab(event, 'EventSettings')">
+                    <span class="tab-step">5</span> Events
+                </button>
+                <button class="tablinks sub-tab" onclick="openTab(event, 'OverlayMovement')">
+                    <span class="tab-step">6</span> Movement
+                </button>
+                <button class="tablinks sub-tab" onclick="openTab(event, 'PostProcessing')">
+                    <span class="tab-step">7</span> Post-Processing
+                </button>
+            </div>
+        </div>
+
+        <!-- Run Section -->
+        <button class="tablinks run-tab main-section" onclick="openTab(event, 'UpdateConfiguration')">
+            <i class="fas fa-play"></i> Run
+        </button>
+
+        <!-- Results Section -->
+        <button class="tablinks results-tab main-section active" onclick="openTab(event, 'DataAnalysis')">
+            <i class="fas fa-chart-bar"></i> Results
+        </button>
+
         <script>
             document.addEventListener("DOMContentLoaded", function () {
                 document.getElementById("ScenarioSettings").style.display = "block";
+                // Show Quick Start for first-time users
+                if (!localStorage.getItem('oppnda_quickstart_seen')) {
+                    document.getElementById('quickStartModal').style.display = 'flex';
+                }
             });
+
+            function toggleSettingsMenu(event) {
+                event.stopPropagation();
+                const submenu = document.getElementById('settingsSubmenu');
+                const header = event.currentTarget;
+                const chevron = header.querySelector('.section-chevron');
+
+                if (submenu.classList.contains('collapsed')) {
+                    submenu.classList.remove('collapsed');
+                    chevron.style.transform = 'rotate(0deg)';
+                } else {
+                    submenu.classList.add('collapsed');
+                    chevron.style.transform = 'rotate(-90deg)';
+                }
+            }
         </script>
-        <button class="tablinks" style="margin-left: 1vw;" onclick="openTab(event, 'InterfaceSettings')">>
-            Interface</button>
-        <button class="tablinks" style="margin-left: 1vw;" onclick="openTab(event, 'GroupSettings')">> Group</button>
-        <button class="tablinks" style="margin-left: 1vw;" onclick="openTab(event, 'ReportSettings')">> Report</button>
-        <button class="tablinks" style="margin-left: 1vw;" onclick="openTab(event, 'EventSettings')">> Events</button>
-        <button class="tablinks" style="margin-left: 1vw;" onclick="openTab(event, 'OverlayMovement')">> Map Based
-            Movement</button>
-        <button class="tablinks" onclick="openTab(event, 'UpdateConfiguration')">Update & Run</button>
-        <button class="tablinks" onclick="openTab(event, 'DataAnalysis')">Data Analysis</button>
-        <button class="tablinks" onclick="openTab(event, 'PostProcessing')">Post-Processing</button>
+
         <div class="group-logo-button">
             <h4>Developed by</h4>
             <img src="/GUI/images/rglogo.png" alt="Group Logo" onclick="openTab(event, 'MembersPage')">
         </div>
     </div>
     <br><br><br>
+
     <!-- Scenario Settings -->
 
     <div id="ScenarioSettings" class="tabcontent">
         <div class="banner-image" style="flex: 1;">
             <img src="/GUI/images/o8.png" alt="Banner Image" style="width: 100%; height: auto; border-radius: 1%;">
         </div>
+
+        <!-- Import ONE Configuration - Below Banner -->
+        <div class="import-section"
+            style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 8px; padding: 15px 20px; margin: 15px 0; border: 1px solid #bae6fd;">
+            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                <span style="font-weight: 600; color: #0369a1;">
+                    <i class="fas fa-file-import"></i> Import Config:
+                </span>
+                <input type="file" id="importConfigFile" accept=".txt"
+                    style="flex: 1; min-width: 200px; padding: 8px; border: 1px solid #7dd3fc; border-radius: 6px; background: white;">
+                <button type="button" class="edit-button" onclick="importONEConfig()" style="white-space: nowrap;">
+                    <i class="fas fa-upload"></i> Import
+                </button>
+                <span id="importStatus" style="color: #64748b; font-size: 13px;"></span>
+            </div>
+        </div>
+
         <div class="split-container">
             <!-- Left side: Scenario Settings -->
             <div>
@@ -287,7 +408,7 @@
                 <script>
                     document.addEventListener("DOMContentLoaded", function () {
                         var input = document.getElementById('commonRouter');
-                        new Tagify(input, {
+                        var routerTagify = new Tagify(input, {
                             whitelist: [
                                 "EpidemicRouter",
                                 "ProphetRouter",
@@ -307,8 +428,24 @@
                                 closeOnSelect: false
                             }
                         });
+
+                        // Store globally for batch preview access
+                        window.routerTagify = routerTagify;
+
+                        // Update batch preview when routers change
+                        // Use a function that checks if updateBatchPreview exists
+                        function triggerBatchUpdate() {
+                            if (typeof window.updateBatchPreview === 'function') {
+                                window.updateBatchPreview();
+                            }
+                        }
+
+                        routerTagify.on('add', triggerBatchUpdate);
+                        routerTagify.on('remove', triggerBatchUpdate);
                     });
                 </script>
+
+
 
 
                 <div class="form-group">
@@ -880,46 +1017,77 @@
 
     <div id="UpdateConfiguration" class="tabcontent">
 
-        <!-- Import ONE Configuration -->
-        <fieldset style="margin-bottom: 20px;">
-            <legend><i class="fas fa-file-import"></i> Import ONE Configuration</legend>
-            <div class="form-group">
-                <label for="importConfigFile">Load existing ONE .txt config file:</label>
-                <input type="file" id="importConfigFile" accept=".txt">
-            </div>
-            <button type="button" class="edit-button" onclick="importONEConfig()">
-                <i class="fas fa-upload"></i> Import Config
-            </button>
-            <span id="importStatus" style="margin-left: 10px; color: #64748b;"></span>
-        </fieldset>
-
-        <h2>Export Settings</h2>
-
-        <div class="form-row">
-            <button type="button" class="add-button" onclick="saveAllSettings()">Save Custom Settings</button>
-            <button type="button" class="edit-button" onclick="saveDefaultSettings()">Save Default Settings</button>
-        </div>
-        <br>
         <form class="interface-grid">
-            <h2 style="margin-bottom: 0;">Run</h2>
+            <h2 style="margin-bottom: 0;"><i class="fas fa-play-circle" style="color: #10b981;"></i> Run Simulation</h2>
+
+            <!-- Batch Preview -->
+            <div class="batch-preview" id="batchPreviewContainer">
+                <div class="batch-preview-icon">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <div class="batch-preview-text" id="batchCountPreview">
+                    <h4>Batch Runs</h4>
+                    <span>1</span>
+                </div>
+            </div>
+
             <div class="form-group" style="padding-bottom: 1vh;">
                 <div class="checkbox-container" style="margin-top: 0;">
-                    <input type="checkbox" id="batchMode" name="batchMode">
-                    <label for="batchMode">Batch Mode</label>
-                </div>
-                <div class="checkbox-container">
                     <input type="checkbox" id="compile" name="compile">
-                    <label for="compile">Compile</label>
+                    <label for="compile">Compile before running</label>
                 </div>
             </div>
-            <div class="form-row">
 
-
+            <!-- Progress bar (hidden by default) -->
+            <div id="simulationProgress" style="display: none;">
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar" style="width: 0%;"></div>
+                </div>
+                <p class="progress-text" id="progressText">Preparing simulation...</p>
             </div>
+
             <div class="form-group">
-                <button type="button" class="full-width-button" onclick="runONE()">Run ONE</button>
+                <button type="button" class="full-width-button" onclick="runONE()" id="runButton">
+                    <i class="fas fa-play"></i> Run ONE Simulator
+                </button>
             </div>
         </form>
+
+        <!-- Post-Processing Only Section -->
+        <fieldset
+            style="margin-top: 20px; border: 2px dashed #64748b; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
+            <legend><i class="fas fa-cogs"></i> Run Post-Processing Only</legend>
+            <p style="color: #64748b; margin-bottom: 15px; font-size: 13px;">
+                Run post-processing on existing report files without running simulation.
+            </p>
+
+            <div class="form-row" style="gap: 10px;">
+                <button type="button" class="edit-button" onclick="runPostProcessingStep('averager')" style="flex: 1;">
+                    <i class="fas fa-calculator"></i> Run Averager
+                </button>
+                <button type="button" class="edit-button" onclick="runPostProcessingStep('analysis')" style="flex: 1;">
+                    <i class="fas fa-chart-line"></i> Run Analysis
+                </button>
+                <button type="button" class="edit-button" onclick="runPostProcessingStep('regression')"
+                    style="flex: 1;">
+                    <i class="fas fa-brain"></i> Run Regression
+                </button>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <button type="button" class="full-width-button" onclick="runAllPostProcessing()"
+                    style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
+                    <i class="fas fa-layer-group"></i> Run All Post-Processing
+                </button>
+            </div>
+
+            <!-- Post-processing output -->
+            <div id="postProcessingOutput" style="display: none; margin-top: 15px;">
+                <pre id="postProcessingLog"
+                    style="background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 8px; max-height: 200px; overflow-y: auto; font-size: 12px; white-space: pre-wrap;"></pre>
+            </div>
+        </fieldset>
+
     </div>
 
     <div id="DataAnalysis" class="tabcontent">
@@ -987,63 +1155,197 @@
     <div id="PostProcessing" class="tabcontent">
         <h2>Post-Processing Configuration</h2>
         <p style="color: #64748b; margin-bottom: 20px;">Configure batch processing, analysis, and regression settings.
-            Changes are saved to JSON files.</p>
+            Changes are saved automatically.</p>
 
-        <!-- Batch Config Section (FIRST) -->
-        <fieldset id="batchConfigSection">
-            <legend><i class="fas fa-layer-group"></i> Batch Processing Configuration</legend>
-            <form id="batchConfigForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="batchFolder">Report Folder:</label>
-                        <div class="folder-input-wrapper" onclick="browseDirectory('batchFolder')">
-                            <i class="fas fa-folder-open folder-icon"></i>
-                            <input type="text" id="batchFolder" name="folder" placeholder="Click to select folder"
-                                readonly class="folder-input">
+        <!-- Filename Pattern - Beginner Friendly -->
+        <fieldset id="filenamePatternSection"
+            style="margin-bottom: 20px; background: linear-gradient(135deg, #f0f9ff 0%, #f8fafc 100%);">
+            <legend><i class="fas fa-magic"></i> Quick Setup</legend>
+            <div style="padding: 10px;">
+                <p style="color: #475569; margin-bottom: 15px;">
+                    <strong>Choose how your ONE report files are named:</strong>
+                </p>
+
+                <!-- Preset Buttons -->
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+                    <button type="button" class="preset-button" onclick="applyFilenamePreset('standard')"
+                        style="flex: 1; min-width: 200px; padding: 15px; border: 2px solid #3b82f6; background: white; border-radius: 8px; cursor: pointer; text-align: left;">
+                        <div style="font-weight: bold; color: #1e40af;"><i class="fas fa-star"></i> Standard
+                            (Recommended)</div>
+                        <div style="font-size: 12px; color: #64748b; margin-top: 5px;">
+                            Scenario_Router_Seed_TTL_Buffer_Report.txt
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="batchExtension">File Extension:</label>
-                        <input type="text" id="batchExtension" name="extension" placeholder="e.g., .txt">
+                    </button>
+                    <button type="button" class="preset-button" onclick="applyFilenamePreset('simple')"
+                        style="flex: 1; min-width: 200px; padding: 15px; border: 2px solid #10b981; background: white; border-radius: 8px; cursor: pointer; text-align: left;">
+                        <div style="font-weight: bold; color: #059669;"><i class="fas fa-leaf"></i> Simple</div>
+                        <div style="font-size: 12px; color: #64748b; margin-top: 5px;">
+                            Report_Router_Seed.txt
+                        </div>
+                    </button>
+                    <button type="button" class="preset-button" onclick="applyFilenamePreset('custom')"
+                        style="flex: 1; min-width: 200px; padding: 15px; border: 2px solid #8b5cf6; background: white; border-radius: 8px; cursor: pointer; text-align: left;">
+                        <div style="font-weight: bold; color: #7c3aed;"><i class="fas fa-sliders-h"></i> Custom</div>
+                        <div style="font-size: 12px; color: #64748b; margin-top: 5px;">
+                            Define your own pattern
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Live Preview -->
+                <div id="dynamicPatternPreview"
+                    style="background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 8px; font-family: monospace;">
+                    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 8px;">YOUR FILES LOOK LIKE:</div>
+                    <div style="font-size: 13px; word-break: break-all;">
+                        <span style="color: #fbbf24;">Scenario</span><span style="color: #64748b;">_</span><span
+                            style="color: #34d399;">Router</span><span style="color: #64748b;">_</span><span
+                            style="color: #60a5fa;">Seed</span><span style="color: #64748b;">_</span><span
+                            style="color: #f472b6;">TTL</span><span style="color: #64748b;">_</span><span
+                            style="color: #fb923c;">Buffer</span><span style="color: #64748b;">_</span><span
+                            style="color: #c084fc;">Report</span><span style="color: #94a3b8;">.txt</span>
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="batchFileContains">File Name Contains:</label>
-                        <input type="text" id="batchFileContains" name="file_contains"
-                            placeholder="e.g., CCNApplicationReport">
-                    </div>
-                    <div class="form-group">
-                        <label for="batchDelimiter">Filename Delimiter:</label>
-                        <input type="text" id="batchDelimiter" name="delimiter" placeholder="e.g., _" maxlength="5">
-                    </div>
+                <!-- Position Legend (simple) -->
+                <div id="dynamicPatternPositions"
+                    style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; font-size: 12px;">
+                    <span style="background: #fef3c7; padding: 4px 8px; border-radius: 4px;">0: Scenario</span>
+                    <span style="background: #d1fae5; padding: 4px 8px; border-radius: 4px;">1: Router</span>
+                    <span style="background: #dbeafe; padding: 4px 8px; border-radius: 4px;">2: Seed</span>
+                    <span style="background: #fce7f3; padding: 4px 8px; border-radius: 4px;">3: TTL</span>
+                    <span style="background: #fed7aa; padding: 4px 8px; border-radius: 4px;">4: Buffer</span>
+                    <span style="background: #ede9fe; padding: 4px 8px; border-radius: 4px;">5: Report</span>
                 </div>
 
+                <p style="color: #64748b; font-size: 12px; margin-top: 15px;">
+                    <i class="fas fa-lightbulb" style="color: #fbbf24;"></i>
+                    <strong>Tip:</strong> Just click a preset above! OppNDA will auto-configure everything to match your
+                    files.
+                </p>
+            </div>
+        </fieldset>
+
+
+        <!-- Unified Post-Processing Settings -->
+        <fieldset id="postProcessingConfigSection">
+            <legend><i class="fas fa-cogs"></i> Report Processing Settings</legend>
+            <form id="postProcessingForm">
+
+                <!-- Shared Directories Section -->
+                <h4 style="margin: 0 0 15px 0; color: #475569;"><i class="fas fa-folder-open"
+                        style="color: #3b82f6;"></i> Directories</h4>
+                <p style="color: #64748b; font-size: 13px; margin-bottom: 15px;">
+                    <i class="fas fa-info-circle"></i> Use relative paths (e.g., <code>reports/</code>) or absolute
+                    paths (e.g., <code>C:\simulations\reports</code>).
+                </p>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="batchDataSeparator">Data Separator:</label>
-                        <input type="text" id="batchDataSeparator" name="data_separator" placeholder="e.g., :"
+                        <label for="batchFolder"
+                            data-tooltip="Directory containing ONE simulation reports. Relative paths are from ONE simulator directory.">
+                            Report Folder:
+                        </label>
+                        <input type="text" id="batchFolder" name="folder" value="reports/"
+                            placeholder="e.g., reports/ or C:\simulations\reports" style="flex: 1;">
+                    </div>
+                    <div class="form-group">
+                        <label for="analysisPlotsDir"
+                            data-tooltip="Directory where plots will be saved. Relative paths are from ONE simulator directory.">
+                            Output Plots:
+                        </label>
+                        <input type="text" id="analysisPlotsDir" name="plots_dir" value="plots/"
+                            placeholder="e.g., plots/ or C:\simulations\plots" style="flex: 1;">
+                    </div>
+                </div>
+                <!-- Hidden field to sync report dirs -->
+                <input type="hidden" id="analysisReportDir" value="reports/">
+
+                <!-- File Settings -->
+                <h4 style="margin: 20px 0 15px 0; color: #475569;"><i class="fas fa-file-alt"
+                        style="color: #10b981;"></i> File Settings</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="batchExtension" data-tooltip="File extension for ONE reports (usually .txt)">
+                            Extension:
+                        </label>
+                        <input type="text" id="batchExtension" name="extension" value=".txt" placeholder=".txt">
+                    </div>
+                    <div class="form-group">
+                        <label for="batchDelimiter"
+                            data-tooltip="Character that separates filename parts. E.g., in 'Scenario_Router_1_300.txt' the delimiter is '_'">
+                            Filename Delimiter:
+                        </label>
+                        <input type="text" id="batchDelimiter" name="delimiter" value="_" placeholder="_" maxlength="5">
+                    </div>
+                    <div class="form-group">
+                        <label for="batchDataSeparator"
+                            data-tooltip="Character separating keys from values inside report files. Usually ':' (e.g., 'delivery_prob: 0.85')">
+                            Data Separator:
+                        </label>
+                        <input type="text" id="batchDataSeparator" name="data_separator" value=":" placeholder=":"
                             maxlength="3">
                     </div>
+                </div>
+
+                <div class="form-row">
                     <div class="form-group">
-                        <label for="batchPrecision">Output Precision:</label>
+                        <label for="batchFileContains"
+                            data-tooltip="Optional filter - only process files whose name contains this text">
+                            Filter by Name:
+                        </label>
+                        <input type="text" id="batchFileContains" name="file_contains"
+                            placeholder="e.g., MessageStatsReport">
+                    </div>
+                    <div class="form-group">
+                        <label for="batchPrecision" data-tooltip="Number of decimal places in averaged output values">
+                            Output Precision:
+                        </label>
                         <input type="number" id="batchPrecision" name="precision" min="1" max="10" value="4">
                     </div>
                 </div>
 
+                <!-- What to Analyze -->
+                <h4 style="margin: 20px 0 15px 0; color: #475569;"><i class="fas fa-chart-bar"
+                        style="color: #8b5cf6;"></i> Analysis Settings</h4>
+
                 <div class="form-group">
-                    <label for="batchIgnoreFields">Ignore Fields:</label>
+                    <label for="analysisReportTypes"
+                        data-tooltip="Types of reports to analyze (e.g., MessageStatsReport, CCNApplicationReport)">
+                        Report Types:
+                    </label>
+                    <input id="analysisReportTypes" name="report_types" placeholder="Select or type report types">
+                </div>
+
+                <div class="form-group">
+                    <label for="analysisMetrics"
+                        data-tooltip="Metrics to include in plots (e.g., delivery_prob, latency_avg)">
+                        Metrics to Plot:
+                    </label>
+                    <input id="analysisMetrics" name="metrics_include" placeholder="Select metrics">
+                </div>
+
+                <div class="form-group">
+                    <label for="batchIgnoreFields"
+                        data-tooltip="Fields to exclude during averaging (ignored in output)">
+                        Ignore Fields:
+                    </label>
                     <input id="batchIgnoreFields" name="ignore_fields" placeholder="Select fields to ignore">
                 </div>
 
-                <!-- Advanced Batch Settings -->
+                <div class="form-group">
+                    <label for="enabledPlotsTagify" data-tooltip="Types of visualizations to generate">
+                        Enabled Plots:
+                    </label>
+                    <input id="enabledPlotsTagify" name="enabled_plots" placeholder="Select plots">
+                </div>
+
+                <!-- Advanced Settings -->
                 <details class="advanced-settings">
                     <summary><i class="fas fa-cog"></i> Advanced Settings</summary>
                     <div class="advanced-content">
                         <h4 style="margin: 15px 0 10px;">Filename Pattern Components</h4>
-                        <p style="color: #64748b; font-size: 13px; margin-bottom: 10px;">Define the component names and
-                            their positions in the filename (split by delimiter)</p>
+                        <p style="color: #64748b; font-size: 13px; margin-bottom: 10px;">
+                            Define what each position in the filename represents (separated by delimiter)
+                        </p>
                         <table class="dynamic-table" id="batchComponentsTable">
                             <thead>
                                 <tr>
@@ -1061,138 +1363,94 @@
                             <i class="fas fa-plus"></i> Add Component
                         </button>
 
-                        <h4 style="margin: 15px 0 10px;">Average Groups</h4>
-                        <p style="color: #64748b; font-size: 13px; margin-bottom: 10px;">Define how files should be
-                            grouped for averaging</p>
+                        <h4 style="margin: 20px 0 10px;">Average Groups</h4>
+                        <p style="color: #64748b; font-size: 13px; margin-bottom: 10px;">
+                            How to group files for averaging (by router, TTL, etc.)
+                        </p>
                         <table class="dynamic-table" id="batchAverageGroupsTable">
                             <thead>
                                 <tr>
                                     <th>Group Name</th>
-                                    <th>Group By (comma separated)</th>
+                                    <th>Group By</th>
                                     <th>Min Files</th>
                                     <th>Output Template</th>
                                     <th style="width: 60px;">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="batchAverageGroupsBody">
-                                <!-- Dynamic rows will be added here -->
+                                <!-- Dynamic rows -->
                             </tbody>
                         </table>
                         <button type="button" class="add-button" style="margin-top: 10px;"
                             onclick="addBatchAverageGroup()">
                             <i class="fas fa-plus"></i> Add Average Group
                         </button>
-                    </div>
-                </details>
-            </form>
-        </fieldset>
 
-        <!-- Analysis Config Section (SECOND) -->
-        <fieldset id="analysisConfigSection">
-            <legend><i class="fas fa-chart-line"></i> Analysis Configuration</legend>
-            <form id="analysisConfigForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="analysisReportDir">Report Directory:</label>
-                        <div class="folder-input-wrapper" onclick="browseDirectory('analysisReportDir')">
-                            <i class="fas fa-folder-open folder-icon"></i>
-                            <input type="text" id="analysisReportDir" name="report_dir"
-                                placeholder="Click to select folder" readonly class="folder-input">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="analysisPlotsDir">Plots Directory:</label>
-                        <div class="folder-input-wrapper" onclick="browseDirectory('analysisPlotsDir')">
-                            <i class="fas fa-folder-open folder-icon"></i>
-                            <input type="text" id="analysisPlotsDir" name="plots_dir"
-                                placeholder="Click to select folder" readonly class="folder-input">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="analysisDataSeparator">Data Separator:</label>
-                        <input type="text" id="analysisDataSeparator" name="data_separator" placeholder="e.g., :"
-                            maxlength="3">
-                    </div>
-                    <div class="form-group">
-                        <label for="analysisReportExtension">Report Extension:</label>
-                        <input type="text" id="analysisReportExtension" name="report_extension"
-                            placeholder="e.g., .txt">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="analysisReportTypes">Report Types:</label>
-                    <input id="analysisReportTypes" name="report_types" placeholder="Select or type report types">
-                </div>
-
-                <div class="form-group">
-                    <label for="analysisMetrics">Metrics to Include:</label>
-                    <input id="analysisMetrics" name="metrics_include" placeholder="Select or type metrics">
-                </div>
-
-                <div class="form-group">
-                    <label for="analysisIgnoreMetrics">Metrics to Ignore:</label>
-                    <input id="analysisIgnoreMetrics" name="metrics_ignore" placeholder="Select or type metrics">
-                </div>
-
-                <div class="form-group">
-                    <label for="enabledPlotsTagify">Enabled Plots:</label>
-                    <input id="enabledPlotsTagify" name="enabled_plots" placeholder="Select plots to enable">
-                </div>
-
-                <!-- Advanced Analysis Settings -->
-                <details class="advanced-settings">
-                    <summary><i class="fas fa-cog"></i> Advanced Settings</summary>
-                    <div class="advanced-content">
-                        <h4 style="margin: 15px 0 10px;">Filename Structure</h4>
+                        <h4 style="margin: 20px 0 10px;">Plot Thresholds</h4>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="analysisFilenameDelimiter">Filename Delimiter:</label>
-                                <input type="text" id="analysisFilenameDelimiter" name="filename_delimiter"
-                                    placeholder="_" maxlength="3">
-                            </div>
-                            <div class="form-group">
-                                <label for="analysisReportTypePos">Report Type Position:</label>
-                                <input type="number" id="analysisReportTypePos" name="report_type_pos" value="0"
-                                    min="0">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="analysisRouterPos">Router Position:</label>
-                                <input type="number" id="analysisRouterPos" name="router_pos" value="1" min="0">
-                            </div>
-                            <div class="form-group">
-                                <label for="analysisGroupingTypePos">Grouping Type Position:</label>
-                                <input type="number" id="analysisGroupingTypePos" name="grouping_type_pos" value="-1">
-                            </div>
-                        </div>
-
-                        <h4 style="margin: 15px 0 10px;">Plot Thresholds</h4>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="analysisMinValuesLine">Min Values for Line Plot:</label>
+                                <label for="analysisMinValuesLine"
+                                    data-tooltip="Minimum data points required to generate a line plot">
+                                    Min Values (Line):
+                                </label>
                                 <input type="number" id="analysisMinValuesLine" name="min_values_line" value="2"
                                     min="1">
                             </div>
                             <div class="form-group">
-                                <label for="analysisMinValuesSurface">Min Values for Surface:</label>
+                                <label for="analysisMinValuesSurface"
+                                    data-tooltip="Minimum data points required for 3D surface plot">
+                                    Min Values (Surface):
+                                </label>
                                 <input type="number" id="analysisMinValuesSurface" name="min_values_surface" value="3"
                                     min="1">
                             </div>
                             <div class="form-group">
-                                <label for="analysisMinFilesHeatmap">Min Files for Heatmap:</label>
+                                <label for="analysisMinFilesHeatmap"
+                                    data-tooltip="Minimum files required to generate a heatmap">
+                                    Min Files (Heatmap):
+                                </label>
                                 <input type="number" id="analysisMinFilesHeatmap" name="min_files_heatmap" value="2"
                                     min="1">
                             </div>
                         </div>
 
-                        <h4 style="margin: 15px 0 10px;">Grouping Labels</h4>
-                        <p style="color: #64748b; font-size: 13px; margin-bottom: 10px;">Define display labels for each
-                            grouping type in plots</p>
+                        <h4 style="margin: 20px 0 10px;">Filename Position Mapping</h4>
+                        <p style="color: #64748b; font-size: 13px; margin-bottom: 10px;">
+                            Position of each component in averaged filenames (for analysis)
+                        </p>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="analysisReportTypePos"
+                                    data-tooltip="0-based position of report type in filename">
+                                    Report Type Pos:
+                                </label>
+                                <input type="number" id="analysisReportTypePos" name="report_type_pos" value="0"
+                                    min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="analysisRouterPos"
+                                    data-tooltip="0-based position of router name in filename">
+                                    Router Pos:
+                                </label>
+                                <input type="number" id="analysisRouterPos" name="router_pos" value="1" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="analysisGroupingTypePos"
+                                    data-tooltip="Position of grouping type (TTL/Buffer). Use -1 if not present.">
+                                    Grouping Type Pos:
+                                </label>
+                                <input type="number" id="analysisGroupingTypePos" name="grouping_type_pos" value="-1">
+                            </div>
+                        </div>
+                        <input type="hidden" id="analysisFilenameDelimiter" value="_">
+                        <input type="hidden" id="analysisDataSeparator" value=":">
+                        <input type="hidden" id="analysisReportExtension" value=".txt">
+                        <input type="hidden" id="analysisIgnoreMetrics" value="">
+
+                        <h4 style="margin: 20px 0 10px;">Grouping Labels</h4>
+                        <p style="color: #64748b; font-size: 13px; margin-bottom: 10px;">
+                            Display labels for plot axes
+                        </p>
                         <table class="dynamic-table" id="analysisGroupingLabelsTable">
                             <thead>
                                 <tr>
@@ -1202,7 +1460,7 @@
                                 </tr>
                             </thead>
                             <tbody id="analysisGroupingLabelsBody">
-                                <!-- Dynamic rows will be added here -->
+                                <!-- Dynamic rows -->
                             </tbody>
                         </table>
                         <button type="button" class="add-button" style="margin-top: 10px;"
@@ -1222,32 +1480,41 @@
                     style="margin-bottom: 15px; padding: 10px; background: rgba(99, 102, 241, 0.1); border-radius: 8px;">
                     <input type="checkbox" id="enableML" name="enable_ml">
                     <label for="enableML" style="font-weight: 600;">Enable ML Regression Analysis</label>
+                    <p style="margin: 8px 0 0 24px; font-size: 12px; color: #64748b;">
+                        <i class="fas fa-info-circle"></i> Uses CSV files from the Output Plots folder above
+                    </p>
                 </div>
+                <!-- Hidden field to sync with plots directory -->
+                <input type="hidden" id="regressionCsvDir" value="plots/">
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="regressionCsvDir">CSV Directory:</label>
-                        <div class="folder-input-wrapper" onclick="browseDirectory('regressionCsvDir')">
-                            <i class="fas fa-folder-open folder-icon"></i>
-                            <input type="text" id="regressionCsvDir" name="csv_directory"
-                                placeholder="Click to select folder" readonly class="folder-input">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="regressionOutputDir">Output Directory:</label>
-                        <div class="folder-input-wrapper" onclick="browseDirectory('regressionOutputDir')">
-                            <i class="fas fa-folder-open folder-icon"></i>
+                        <label for="regressionOutputDir" data-tooltip="Where to save regression analysis results">
+                            Results Folder:
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <select onchange="applyFolderPreset('regressionOutputDir', this.value)"
+                                style="width: 140px; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                <option value="">Custom...</option>
+                                <option value="regression_results/" selected>regression_results/</option>
+                                <option value="ml_output/">ml_output/</option>
+                                <option value="plots/regression/">plots/regression/</option>
+                            </select>
                             <input type="text" id="regressionOutputDir" name="output_directory"
-                                placeholder="Click to select folder" readonly class="folder-input">
+                                value="regression_results/" placeholder="e.g., regression_results/" style="flex: 1;">
                         </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="regressionTarget"
+                            data-tooltip="The metric you want to predict (e.g., delivery_prob)">
+                            Target Variable:
+                        </label>
+                        <input type="text" id="regressionTarget" name="target" value="delivery_prob"
+                            placeholder="e.g., delivery_prob">
                     </div>
                 </div>
 
                 <div class="form-row">
-                    <div class="form-group">
-                        <label for="regressionTarget">Target Variable:</label>
-                        <input type="text" id="regressionTarget" name="target" placeholder="e.g., delivery_prob">
-                    </div>
                     <div class="form-group">
                         <label for="regressionSelectionMode">Selection Mode:</label>
                         <select id="regressionSelectionMode" name="selection_mode">
@@ -1362,14 +1629,6 @@
                 </details>
             </form>
         </fieldset>
-
-        <div class="form-row" style="margin-top: 20px; gap: 10px;">
-            <button type="button" class="add-button" style="flex: 1; padding: 12px;"
-                onclick="saveAllPostProcessingConfigs()">
-                <i class="fas fa-save"></i> Save All Configs</button>
-            <button type="button" class="edit-button" style="flex: 1; padding: 12px;" onclick="processData()">
-                <i class="fas fa-cogs"></i> Process Data</button>
-        </div>
     </div>
 
     <script src="/GUI/config.js"></script>

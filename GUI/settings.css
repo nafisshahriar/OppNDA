@@ -91,6 +91,131 @@ legend {
     color: rgb(7, 7, 7);
 }
 
+/* Sidebar Section Styles */
+.sidebar-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.section-header {
+    width: 90%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 4px 0;
+    transition: all 0.3s ease;
+}
+
+.section-header:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.section-header i {
+    margin-right: 8px;
+}
+
+.section-chevron {
+    transition: transform 0.3s ease;
+    margin-left: auto;
+    margin-right: 0;
+}
+
+/* Settings Submenu */
+.settings-submenu {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+    max-height: 500px;
+    transition: max-height 0.3s ease-in-out, opacity 0.3s ease;
+    opacity: 1;
+}
+
+.settings-submenu.collapsed {
+    max-height: 0;
+    opacity: 0;
+}
+
+/* Sub-tab styling */
+.sub-tab {
+    width: 85%;
+    padding: 10px 16px;
+    font-size: 14px;
+    margin-left: 10px;
+    background: transparent;
+    border-left: 2px solid #e2e8f0;
+    border-radius: 0 6px 6px 0;
+}
+
+.sub-tab:hover {
+    background-color: #e2e8f0;
+    border-left-color: #3b82f6;
+}
+
+.sub-tab.active {
+    background-color: #dbeafe;
+    border-left-color: #3b82f6;
+    color: #1e40af;
+}
+
+.sub-tab .tab-step {
+    background: #94a3b8;
+    color: white;
+    padding: 2px 7px;
+    border-radius: 50%;
+    font-size: 11px;
+    margin-right: 8px;
+}
+
+.sub-tab.active .tab-step {
+    background: #3b82f6;
+}
+
+/* Main Section buttons (Run, Results) */
+.main-section {
+    width: 90%;
+    padding: 14px 20px;
+    font-size: 15px;
+    font-weight: 500;
+    margin: 4px 0;
+    border-radius: 8px;
+}
+
+.main-section.run-tab {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.main-section.run-tab:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.main-section.results-tab {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.main-section.results-tab:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
 
 .tabcontent {
     width: calc(100% - 21vw);
@@ -745,4 +870,326 @@ label[data-tooltip]:hover::before {
 
 .dynamic-table tbody tr:hover {
     background: #f8fafc;
+}
+
+/* ============================================================================
+   QUICK START MODAL - Modern Glassmorphism Design
+   ============================================================================ */
+
+.quick-start-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.quick-start-content {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%);
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    position: relative;
+    animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.quick-start-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.quick-start-close:hover {
+    color: #ef4444;
+}
+
+.quick-start-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.quick-start-header h2 {
+    font-size: 28px;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 5px;
+}
+
+.quick-start-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.step-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 18px 20px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.step-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+    transform: translateX(5px);
+}
+
+.step-number {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    color: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.step-content h3 {
+    font-size: 16px;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.step-content h3 i {
+    margin-right: 8px;
+    color: #3b82f6;
+}
+
+.step-content p {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0;
+}
+
+.quick-start-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.btn-example {
+    padding: 12px 24px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-example:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+    background: #eff6ff;
+}
+
+.btn-example i {
+    font-size: 16px;
+}
+
+/* ============================================================================
+   TAB STEP NUMBERS
+   ============================================================================ */
+
+.tab-step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+    color: white;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: 8px;
+}
+
+#tabs button.active .tab-step {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+/* Run tab special styling */
+.run-tab {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: white !important;
+    margin-top: 10px;
+    font-weight: 600;
+}
+
+.run-tab:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+}
+
+.run-tab i {
+    margin-right: 6px;
+}
+
+/* ============================================================================
+   BATCH PREVIEW
+   ============================================================================ */
+
+.batch-preview {
+    background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+    border: 1px solid #93c5fd;
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.batch-preview-icon {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+}
+
+.batch-preview-text {
+    flex: 1;
+}
+
+.batch-preview-text h4 {
+    font-size: 14px;
+    color: #1e293b;
+    margin: 0 0 4px 0;
+}
+
+.batch-preview-text span {
+    font-size: 24px;
+    font-weight: 700;
+    color: #3b82f6;
+}
+
+.batch-preview-text small {
+    font-size: 12px;
+    color: #64748b;
+    display: block;
+    margin-top: 4px;
+}
+
+/* ============================================================================
+   INLINE HINTS
+   ============================================================================ */
+
+.inline-hint {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.inline-hint i {
+    color: #3b82f6;
+    font-size: 11px;
+}
+
+.inline-hint code {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    color: #3b82f6;
+}
+
+/* ============================================================================
+   PROGRESS BAR
+   ============================================================================ */
+
+.progress-container {
+    width: 100%;
+    background: #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    height: 12px;
+    margin: 15px 0;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6);
+    background-size: 200% 100%;
+    animation: progressGradient 2s linear infinite;
+    border-radius: 10px;
+    transition: width 0.3s;
+}
+
+@keyframes progressGradient {
+    0% {
+        background-position: 0% 0%;
+    }
+
+    100% {
+        background-position: 200% 0%;
+    }
+}
+
+.progress-text {
+    text-align: center;
+    font-size: 13px;
+    color: #475569;
+    margin-top: 8px;
 }

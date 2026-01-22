@@ -8,6 +8,7 @@ import sys
 import json
 import platform
 import subprocess
+from datetime import datetime
 from pathlib import Path
 from flask import Blueprint, jsonify, request, current_app
 
@@ -20,11 +21,226 @@ CONFIG_FILES = {
     'regression': 'regression_config.json'
 }
 
+# ============================================================================
+# DEFAULT SETTINGS - Enable new users to run simulations immediately
+# ============================================================================
+
+DEFAULT_ONE_SETTINGS = {
+    # Scenario
+    'scenario_name': 'default_scenario',
+    'simulate_connections': True,
+    'update_interval': 0.1,
+    'end_time': 43200,  # 12 hours
+    
+    # Interface
+    'interface_name': 'btInterface',
+    'interface_type': 'SimpleBroadcastInterface',
+    'transmit_speed': '250k',
+    'transmit_range': 10,
+    
+    # Group/Node
+    'movement_model': 'ShortestPathMapBasedMovement',
+    'router': 'EpidemicRouter',
+    'buffer_size': '5M',
+    'wait_time': '0, 120',
+    'speed': '0.5, 1.5',
+    'msg_ttl': 300,
+    'num_hosts': 40,
+    
+    # Movement
+    'rng_seed': 1,
+    'world_size': '4500, 3400',
+    'warmup': 1000,
+    
+    # Reports
+    'report_warmup': 0,
+    'report_dir': 'reports/',
+    'default_reports': ['MessageStatsReport', 'ContactTimesReport'],
+    
+    # Map files
+    'map_files': ['roads.wkt'],
+    
+    # Router-specific
+    'prophet_time_unit': 30,
+    'spray_copies': 6,
+    'spray_binary_mode': True,
+    
+    # Optimization
+    'cell_size_mult': 5,
+    'randomize_update_order': True,
+}
+
+
+def generate_default_settings(overrides=None):
+    """Generate a complete ONE simulator settings file content with sensible defaults.
+    
+    Args:
+        overrides: dict of values to override defaults (e.g., {'scenario_name': 'my_sim'})
+    
+    Returns:
+        str: Complete ONE settings file content ready to save
+    """
+    config = DEFAULT_ONE_SETTINGS.copy()
+    if overrides:
+        config.update(overrides)
+    
+    # Generate timestamp for unique scenario names
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    scenario_name = config.get('scenario_name', 'default_scenario')
+    
+    content = f"""#
+# OppNDA Default Simulation Settings
+# Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+#
+
+## Scenario settings
+Scenario.name = {scenario_name}_%%Group.router%%_%%MovementModel.rngSeed%%
+Scenario.simulateConnections = {'true' if config['simulate_connections'] else 'false'}
+Scenario.updateInterval = {config['update_interval']}
+Scenario.endTime = {config['end_time']}
+
+## Interface settings
+{config['interface_name']}.type = {config['interface_type']}
+{config['interface_name']}.transmitSpeed = {config['transmit_speed']}
+{config['interface_name']}.transmitRange = {config['transmit_range']}
+
+Scenario.nrofHostGroups = 1
+
+## Common settings for all groups
+Group.movementModel = {config['movement_model']}
+Group.router = [{config['router']}]
+Group.bufferSize = {config['buffer_size']}
+Group.waitTime = {config['wait_time']}
+Group.nrofInterfaces = 1
+Group.interface1 = {config['interface_name']}
+Group.speed = {config['speed']}
+Group.msgTtl = {config['msg_ttl']}
+Group.nrofHosts = {config['num_hosts']}
+
+## Group 1 settings
+Group1.groupID = p
+Group1.numHosts = {config['num_hosts']}
+
+## Event settings
+Events.nrof = 1
+Events1.class = MessageEventGenerator
+Events1.interval = 25, 35
+Events1.size = 500k, 1M
+Events1.hosts = 0, {config['num_hosts'] - 1}
+Events1.prefix = M
+
+## Movement model settings
+MovementModel.rngSeed = {config['rng_seed']}
+MovementModel.worldSize = {config['world_size']}
+MovementModel.warmup = {config['warmup']}
+
+## Map based movement settings
+MapBasedMovement.nrofMapFiles = {len(config['map_files'])}
+"""
+    
+    for i, map_file in enumerate(config['map_files'], 1):
+        content += f"MapBasedMovement.mapFile{i} = data/{map_file}\n"
+    
+    content += f"""
+## Report settings
+Report.nrofReports = {len(config['default_reports'])}
+Report.warmup = {config['report_warmup']}
+Report.reportDir = {config['report_dir']}
+"""
+    
+    for i, report in enumerate(config['default_reports'], 1):
+        content += f"Report.report{i} = {report}\n"
+    
+    content += f"""
+## Router settings
+ProphetRouter.secondsInTimeUnit = {config['prophet_time_unit']}
+SprayAndWaitRouter.nrofCopies = {config['spray_copies']}
+SprayAndWaitRouter.binaryMode = {'true' if config['spray_binary_mode'] else 'false'}
+
+## Optimization settings
+Optimization.cellSizeMult = {config['cell_size_mult']}
+Optimization.randomizeUpdateOrder = {'true' if config['randomize_update_order'] else 'false'}
+
+## GUI settings
+GUI.UnderlayImage.fileName = data/helsinki_underlay.png
+GUI.UnderlayImage.offset = 64, 20
+GUI.UnderlayImage.scale = 4.75
+GUI.UnderlayImage.rotate = -0.015
+GUI.EventLogPanel.nrofEvents = 100
+"""
+    
+    return content
+
 
 def get_config_path(config_name):
     """Get the cross-platform path to a config file."""
     config_dir = current_app.config['CONFIG_DIR']
     return config_dir / CONFIG_FILES.get(config_name, '')
+
+
+# ============================================================================
+# DEFAULT SETTINGS API ENDPOINTS
+# ============================================================================
+
+@api_bp.route('/default-settings', methods=['GET'])
+def get_default_settings():
+    """Return the default ONE simulator settings as JSON.
+    
+    New users can use this to understand what defaults will be used.
+    """
+    return jsonify({
+        'defaults': DEFAULT_ONE_SETTINGS,
+        'message': 'These defaults will be used if not overridden'
+    })
+
+
+@api_bp.route('/default-settings/generate', methods=['POST'])
+def generate_default_settings_endpoint():
+    """Generate a default ONE settings file with optional overrides.
+    
+    Request body:
+        {
+            "overrides": {"scenario_name": "my_sim", "router": "ProphetRouter"},
+            "save": true,
+            "filename": "my_settings.txt"
+        }
+    
+    Returns:
+        Settings content and optionally saves to file
+    """
+    try:
+        data = request.get_json() or {}
+        overrides = data.get('overrides', {})
+        should_save = data.get('save', False)
+        filename = data.get('filename', 'default_settings.txt')
+        
+        # Generate settings content
+        content = generate_default_settings(overrides)
+        
+        result = {
+            'success': True,
+            'content': content
+        }
+        
+        # Optionally save to file
+        if should_save:
+            base_dir = current_app.config['BASE_DIR']
+            filename = Path(filename).name
+            if not filename.endswith('.txt'):
+                filename += '.txt'
+            
+            settings_path = base_dir / filename
+            with open(settings_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            
+            result['saved'] = True
+            result['path'] = str(settings_path)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 
 @api_bp.route('/config/<config_name>', methods=['GET'])
@@ -569,6 +785,100 @@ def save_all_settings():
         return jsonify({'error': str(e)}), 500
 
 
+# ============================================================================
+# INDIVIDUAL POST-PROCESSING ENDPOINTS
+# ============================================================================
+
+@api_bp.route('/run-averager', methods=['POST'])
+def run_averager_only():
+    """Run only the report averager script."""
+    try:
+        base_dir = current_app.config['BASE_DIR']
+        core_dir = current_app.config['CORE_DIR']
+        
+        averager_script = core_dir / 'averager.py'
+        if not averager_script.exists():
+            return jsonify({
+                'success': False,
+                'message': 'averager.py not found'
+            }), 404
+        
+        result = subprocess.run(
+            [sys.executable, str(averager_script)],
+            cwd=str(base_dir),
+            capture_output=True,
+            text=True
+        )
+        
+        return jsonify({
+            'success': result.returncode == 0,
+            'message': 'Report averaging completed' if result.returncode == 0 else 'Report averaging failed',
+            'output': result.stdout if result.returncode == 0 else result.stderr
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+
+@api_bp.route('/run-analysis', methods=['POST'])
+def run_analysis_only():
+    """Run only the analysis/visualization script."""
+    try:
+        base_dir = current_app.config['BASE_DIR']
+        core_dir = current_app.config['CORE_DIR']
+        
+        analysis_script = core_dir / 'analysis.py'
+        if not analysis_script.exists():
+            return jsonify({
+                'success': False,
+                'message': 'analysis.py not found'
+            }), 404
+        
+        result = subprocess.run(
+            [sys.executable, str(analysis_script)],
+            cwd=str(base_dir),
+            capture_output=True,
+            text=True
+        )
+        
+        return jsonify({
+            'success': result.returncode == 0,
+            'message': 'Analysis completed' if result.returncode == 0 else 'Analysis failed',
+            'output': result.stdout if result.returncode == 0 else result.stderr
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+
+@api_bp.route('/run-regression', methods=['POST'])
+def run_regression_only():
+    """Run only the ML regression script."""
+    try:
+        base_dir = current_app.config['BASE_DIR']
+        core_dir = current_app.config['CORE_DIR']
+        
+        regression_script = core_dir / 'regression.py'
+        if not regression_script.exists():
+            return jsonify({
+                'success': False,
+                'message': 'regression.py not found'
+            }), 404
+        
+        result = subprocess.run(
+            [sys.executable, str(regression_script)],
+            cwd=str(base_dir),
+            capture_output=True,
+            text=True
+        )
+        
+        return jsonify({
+            'success': result.returncode == 0,
+            'message': 'Regression analysis completed' if result.returncode == 0 else 'Regression failed',
+            'output': result.stdout if result.returncode == 0 else result.stderr
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+
 def deep_merge(base: dict, updates: dict) -> dict:
     """Deep merge updates into base dict, preserving non-updated nested fields.
     
@@ -587,3 +897,4 @@ def deep_merge(base: dict, updates: dict) -> dict:
             result[key] = value
     
     return result
+

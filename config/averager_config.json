@@ -1,25 +1,26 @@
 {
-  "folder": "reportQP",
+  "folder": "reports/",
   "file_filter": {
     "extension": ".txt",
     "contains": ""
   },
   "report_types": [
-    "CCNApplicationReport",
-    "MessageStatsReport"
+    "MessageStatsReport",
+    "ContactTimesReport"
   ],
   "filename_pattern": {
     "delimiter": "_",
     "components": {
-      "prefix": 0,
+      "scenario_name": 0,
       "router": 1,
       "seed": 2,
       "ttl": 3,
       "buffer": 4,
-      "distro": 5,
-      "report_type": 6
+      "report_type": 5
     },
     "extract": {
+      "ttl": "(\\d+)",
+      "seed": "(\\d+)",
       "buffer": "(\\d+)"
     }
   },
@@ -27,7 +28,28 @@
   "ignore_fields": [
     "sim_time"
   ],
-  "average_groups": [],
+  "average_groups": [
+    {
+      "group_by": [
+        "report_type",
+        "router",
+        "ttl"
+      ],
+      "min_files": 2,
+      "name": "ttl_avg",
+      "output_template": "{report_type}_{router}_{ttl}_ttl_average.txt"
+    },
+    {
+      "group_by": [
+        "report_type",
+        "router",
+        "buffer"
+      ],
+      "min_files": 2,
+      "name": "buffer_avg",
+      "output_template": "{report_type}_{router}_{buffer}_buffer_average.txt"
+    }
+  ],
   "output": {
     "precision": 4
   }

@@ -20,6 +20,13 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 CONFIG_DIR = PROJECT_ROOT / 'config'
 
+# Import resource manager for dynamic worker optimization
+try:
+    from core.resource_manager import ResourceManager, get_optimal_workers
+    RESOURCE_MANAGER_AVAILABLE = True
+except ImportError:
+    RESOURCE_MANAGER_AVAILABLE = False
+
 def read_and_parse_file_parallel(args):
     """Worker function for parallel file reading and parsing"""
     filepath, separator, ignore_fields = args
@@ -57,10 +64,18 @@ def average_group_data(aggregated):
     return averaged
 
 class ReportAverager:
-    def __init__(self, config_path):
+    def __init__(self, config_path, safety_enabled=True):
         self.config = self.load_config(config_path)
         self.validate_config()
-        self.num_processes = min(4, os.cpu_count() or 1)  # Use up to 4 processes
+        self.safety_enabled = safety_enabled
+        
+        # Dynamic worker calculation using ResourceManager
+        if RESOURCE_MANAGER_AVAILABLE:
+            self.resource_manager = ResourceManager(safety_enabled=safety_enabled)
+            self.num_processes = self.resource_manager.get_optimal_workers()
+        else:
+            # Fallback to static limit
+            self.num_processes = min(4, os.cpu_count() or 1)
         
     def load_config(self, config_path):
         """Load and parse configuration file"""
@@ -264,6 +279,8 @@ class ReportAverager:
         print("="*70)
         print("REPORT AVERAGER - MULTIPROCESSING ENABLED")
         print(f"Processes: {self.num_processes}")
+        if RESOURCE_MANAGER_AVAILABLE and hasattr(self, 'resource_manager'):
+            self.resource_manager.log_status()
         print("="*70)
         
         # Get folder and file filter
@@ -377,11 +394,11 @@ class ReportAverager:
                     num_files = len(unique_files)
                     
                     if num_files < min_files:
-                        print(f"⊗ SKIP {group_dict} ({num_files} files < {min_files} minimum)")
+                        print(f"[SKIP] {group_dict} ({num_files} files < {min_files} minimum)")
                         skipped += 1
                         continue
                     
-                    print(f"\n✓ PROCESS {group_dict}")
+                    print(f"\n[OK] PROCESS {group_dict}")
                     print(f"  Files: {num_files}")
                     
                     # Average the data

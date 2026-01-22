@@ -14,6 +14,10 @@
 - 📈 **Visualization Suite** — Generate 3D surfaces, line plots, violin plots, heatmaps, and pair plots
 - 🤖 **Regression Analysis** — Machine learning models to predict network performance
 - ⚙️ **Flexible Configuration** — JSON-based settings for all analysis parameters
+- 🧠 **Dynamic Memory Management** — Intelligent worker optimization to prevent swap-thrashing
+- 🚀 **Quick Start Modal** — Guided onboarding with example scenarios (Urban/Campus)
+- 📋 **Live Batch Preview** — Real-time batch count calculation as you configure parameters
+- 💾 **Auto-Save** — Automatic config persistence when switching tabs
 
 ## Installation
 
@@ -103,7 +107,8 @@ oppnda/
 ├── core/                # Core processing modules
 │   ├── averager.py      # Report averaging
 │   ├── analysis.py      # Visualization engine
-│   └── regression.py    # ML regression
+│   ├── regression.py    # ML regression
+│   └── resource_manager.py  # Dynamic memory management
 ├── config/              # Configuration files
 ├── GUI/                 # Frontend assets
 │   ├── settings.html    # Main interface
@@ -129,6 +134,7 @@ Tests include:
 - Config validation tests
 - Module import tests  
 - Flask app integration tests
+- Resource manager tests
 
 ## Documentation
 
@@ -149,4 +155,4 @@ This project is licensed under the MIT License — see [LICENSE](LICENSE) for de
 ## Acknowledgments
 
 - [ONE Simulator](https://github.com/akeranen/the-one) — The Opportunistic Network Environment simulator
-- Built with [Flask](https://flask.palletsprojects.com/), [Matplotlib](https://matplotlib.org/), [Seaborn](https://seaborn.pydata.org/), and [scikit-learn](https://scikit-learn.org/)
+- Built with [Flask](https://flask.palletsprojects.com/), [Matplotlib](https://matplotlib.org/), [Seaborn](https://seaborn.pydata.org/), [scikit-learn](https://scikit-learn.org/), and [psutil](https://github.com/giampaolo/psutil)

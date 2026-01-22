@@ -16,6 +16,9 @@ seaborn>=0.12.0
 # Machine Learning (for regression.py)
 scikit-learn>=1.0.0
 
+# System Monitoring (for resource_manager.py)
+psutil>=5.9.0
+
 # Testing
 pytest>=7.0.0
 pytest-cov>=4.0.0

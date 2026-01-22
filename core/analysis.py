@@ -24,6 +24,13 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 CONFIG_DIR = PROJECT_ROOT / 'config'
 
+# Import resource manager for dynamic worker optimization
+try:
+    from core.resource_manager import ResourceManager, get_optimal_workers
+    RESOURCE_MANAGER_AVAILABLE = True
+except ImportError:
+    RESOURCE_MANAGER_AVAILABLE = False
+
 def load_config(config_path=None):
     """Load configuration from JSON file (cross-platform)"""
     if config_path is None:
@@ -740,7 +747,14 @@ def main():
     if plot_jobs:
         print(f"Processing {len(plot_jobs)} plots...")
         start_time = time.time()
-        num_processes = min(4, len(plot_jobs))
+        
+        # Dynamic worker calculation using ResourceManager
+        if RESOURCE_MANAGER_AVAILABLE:
+            rm = ResourceManager(safety_enabled=True)
+            num_processes = min(rm.get_optimal_workers(), len(plot_jobs))
+            rm.log_status()
+        else:
+            num_processes = min(4, len(plot_jobs))
         
         with Pool(processes=num_processes) as pool:
             results = pool.map(execute_plot_job, plot_jobs)

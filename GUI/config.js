@@ -15,6 +15,137 @@ const groupSettings = [
     { groupID: 't', numHosts: 8, movementModel: "MapRouteMovement", routeFile: "data/tram10.wkt", routeType: 2, router: "EpidemicRouter", activeTimes: "0", messageTTL: "300", actions: "Edit/Delete" }
 ];
 
+// ============================================================================
+// QUICK START FUNCTIONS
+// ============================================================================
+
+function closeQuickStart() {
+    const modal = document.getElementById('quickStartModal');
+    modal.style.display = 'none';
+
+    // Save preference if checkbox is checked
+    if (document.getElementById('dontShowAgain')?.checked) {
+        localStorage.setItem('oppnda_quickstart_seen', 'true');
+    }
+}
+
+function showQuickStart() {
+    document.getElementById('quickStartModal').style.display = 'flex';
+}
+
+// Example scenario presets
+const EXAMPLE_SCENARIOS = {
+    urban: {
+        name: 'Urban DTN Scenario',
+        scenarioName: 'urban_dtn',
+        endTime: 43200,
+        numHosts: 50,
+        bufferSize: '5M; 10M; 20M',
+        msgTtl: '300; 600',
+        routers: ['EpidemicRouter', 'ProphetRouter', 'SprayAndWaitRouter'],
+        rngSeeds: '1; 2; 3',
+        worldSize: '4500, 3400',
+        warmup: 1000
+    },
+    campus: {
+        name: 'Campus Network Scenario',
+        scenarioName: 'campus_network',
+        endTime: 86400,
+        numHosts: 100,
+        bufferSize: '10M',
+        msgTtl: '600',
+        routers: ['EpidemicRouter', 'ProphetRouter'],
+        rngSeeds: '1; 2; 3; 4; 5',
+        worldSize: '3000, 2000',
+        warmup: 500
+    }
+};
+
+function loadExampleScenario(type) {
+    const scenario = EXAMPLE_SCENARIOS[type];
+    if (!scenario) {
+        console.error('Unknown scenario type:', type);
+        return;
+    }
+
+    // Populate form fields
+    document.getElementById('scenarioName').value = scenario.scenarioName;
+    document.getElementById('endTime').value = scenario.endTime;
+    document.getElementById('commonNumberOfHost').value = scenario.numHosts;
+    document.getElementById('commonBufferSize').value = scenario.bufferSize;
+    document.getElementById('commonTtl').value = scenario.msgTtl;
+    document.getElementById('rngSeed').value = scenario.rngSeeds;
+    document.getElementById('worldSize').value = scenario.worldSize;
+    document.getElementById('warmup').value = scenario.warmup;
+
+    // Update router Tagify
+    const routerInput = document.getElementById('commonRouter');
+    if (routerInput && routerInput._tagify) {
+        routerInput._tagify.removeAllTags();
+        routerInput._tagify.addTags(scenario.routers);
+    }
+
+    // Update batch preview
+    updateBatchPreview();
+
+    // Show confirmation
+    showSaveStatus(`✓ Loaded "${scenario.name}"`, true);
+
+    // Navigate to Scenario tab
+    openTab(null, 'ScenarioSettings');
+}
+
+// Update batch count preview
+function updateBatchPreview() {
+    let routerCount = 1;
+    let seedCount = 1;
+    let ttlCount = 1;
+    let bufferCount = 1;
+
+    // Count routers from global Tagify instance
+    if (window.routerTagify) {
+        routerCount = window.routerTagify.value.length || 1;
+    } else {
+        // Fallback: try parsing the input value directly
+        const routerInput = document.getElementById('commonRouter');
+        if (routerInput && routerInput.value) {
+            try {
+                const routers = JSON.parse(routerInput.value);
+                routerCount = routers.length || 1;
+            } catch (e) { }
+        }
+    }
+
+
+    // Count seeds
+    const seeds = document.getElementById('rngSeed')?.value || '1';
+    seedCount = (seeds.match(/;/g) || []).length + 1;
+
+    // Count TTLs
+    const ttls = document.getElementById('commonTtl')?.value || '300';
+    ttlCount = (ttls.match(/;/g) || []).length + 1;
+
+    // Count buffers
+    const buffers = document.getElementById('commonBufferSize')?.value || '5M';
+    bufferCount = (buffers.match(/;/g) || []).length + 1;
+
+    const totalRuns = routerCount * seedCount * ttlCount * bufferCount;
+
+    // Update preview element if it exists
+    const previewEl = document.getElementById('batchCountPreview');
+    if (previewEl) {
+        previewEl.innerHTML = `
+            <span>${totalRuns}</span>
+            <small>${routerCount} routers × ${seedCount} seeds × ${ttlCount} TTLs × ${bufferCount} buffers</small>
+        `;
+    }
+
+    return totalRuns;
+}
+
+// Make available globally for inline scripts in HTML
+window.updateBatchPreview = updateBatchPreview;
+
 
 // Function to populate the Interface settings table dynamically
 function populateInterfaceTable() {
@@ -368,7 +499,35 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('poiConfiguration').style.display = this.checked ? 'block' : 'none';
         });
     }
+
+    // ============================================================================
+    // BATCH PREVIEW UPDATE LISTENERS
+    // ============================================================================
+
+    // Fields that affect batch count
+    const batchFields = ['commonTtl', 'commonBufferSize', 'rngSeed'];
+    batchFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', updateBatchPreview);
+            field.addEventListener('change', updateBatchPreview);
+        }
+    });
+
+    // Router Tagify needs special handling - wait for it to be initialized in settings.html
+    setTimeout(() => {
+        // Use the global routerTagify instance set by settings.html
+        if (window.routerTagify) {
+            window.routerTagify.on('add', updateBatchPreview);
+            window.routerTagify.on('remove', updateBatchPreview);
+            console.log('Router Tagify events attached');
+        }
+        // Initial update
+        updateBatchPreview();
+    }, 1500);
+
 });
+
 
 // Interface Tagify for multi-select
 let interfaceTagify = null;
@@ -549,9 +708,34 @@ function applyConfigToForm(config) {
         document.getElementById('warmup').value = config['MovementModel.warmup'];
     }
 
-    // Group settings
+    // Group settings - handle router import with Tagify
+    if (config['Group.router']) {
+        let routers = config['Group.router'];
+        // Parse router value - could be array or string like "[EpidemicRouter; ProphetRouter]"
+        if (typeof routers === 'string') {
+            routers = routers.replace(/[\[\]]/g, '').split(';').map(r => r.trim()).filter(r => r);
+        }
+        // Update the Tagify component
+        if (window.routerTagify && routers.length > 0) {
+            window.routerTagify.removeAllTags();
+            window.routerTagify.addTags(routers);
+        }
+    }
+
+    // Handle buffer size - support semicolon-separated batch values
     if (config['Group.bufferSize']) {
-        document.getElementById('commonBufferSize').value = config['Group.bufferSize'];
+        let bufferSize = config['Group.bufferSize'];
+        if (Array.isArray(bufferSize)) {
+            bufferSize = bufferSize.join('; ');
+        } else if (typeof bufferSize === 'string') {
+            // Clean up brackets and normalize separators
+            bufferSize = bufferSize.replace(/[\[\]]/g, '').trim();
+            // Convert comma-separated to semicolon-separated if needed
+            if (bufferSize.includes(',') && !bufferSize.includes(';')) {
+                bufferSize = bufferSize.split(',').map(s => s.trim()).join('; ');
+            }
+        }
+        document.getElementById('commonBufferSize').value = bufferSize;
     }
     if (config['Group.waitTime']) {
         document.getElementById('commonWaitTime').value = config['Group.waitTime'];
@@ -626,6 +810,13 @@ function applyConfigToForm(config) {
     }
 
     alert('Configuration imported successfully! Review the settings before saving.');
+
+    // Update batch preview to reflect imported values
+    setTimeout(() => {
+        if (typeof updateBatchPreview === 'function') {
+            updateBatchPreview();
+        }
+    }, 100);
 }
 
 
@@ -834,7 +1025,14 @@ ${interfaceName}.transmitRange = ${transmitRange}
     // Convert to the desired format
     const CommoNrouter = `[${tagifyValue.map(tag => tag.value).join("; ")}]`;
     const routerCount = tagifyValue.length;
-    const CommoNbufferSize = document.getElementById("commonBufferSize").value;
+
+    // Handle buffer size - support multiple values like "5M; 10M; 20M"
+    let CommoNbufferSize = document.getElementById("commonBufferSize").value;
+    let bufferLen = 1;
+    if (CommoNbufferSize.includes(";")) {
+        CommoNbufferSize = `[${CommoNbufferSize}]`;
+        bufferLen = ((CommoNbufferSize.match(/;/g) || []).length) + 1;
+    }
     const commonRouteFile = document.getElementById("commonRouteFile");
     const CommoNwaitTime = document.getElementById("commonWaitTime").value;
 
@@ -998,7 +1196,10 @@ Events${count}.prefix = ${row['prefix']}
     }
 
     let rngSeedLen = ((rngSeed.match(/;/g) || []).length) + 1;
-    batchNum = routerCount * rngSeedLen * TTLLen;
+
+    // Calculate total batch runs: routers × seeds × TTLs × buffers
+    batchNum = routerCount * rngSeedLen * TTLLen * bufferLen;
+    console.log(`Batch calculation: ${routerCount} routers × ${rngSeedLen} seeds × ${TTLLen} TTLs × ${bufferLen} buffers = ${batchNum} runs`);
     content += `
 ## Movement model settings
 # seed for movement models' pseudo random number generator (default = 0)
@@ -1328,7 +1529,8 @@ function collectRegressionConfig() {
 
     return {
         input: {
-            csv_directory: document.getElementById('regressionCsvDir')?.value || 'plots',
+            // Use the plots directory - that's where analysis.py outputs CSVs
+            csv_directory: document.getElementById('analysisPlotsDir')?.value || 'plots/',
             mode: 'all',
             active_files: []
         },
@@ -1598,7 +1800,27 @@ GUI.EventLogPanel.nrofEvents = 100
 }
 
 function runONE() {
-    const batchMode = document.getElementById("batchMode").checked;
+    // Auto-detect batch mode based on settings
+    const routerInput = document.getElementById("commonRouter");
+    let routerCount = 1;
+    try {
+        const routerTagifyValue = JSON.parse(routerInput?.value || '[]');
+        routerCount = Array.isArray(routerTagifyValue) ? routerTagifyValue.length : 1;
+    } catch (e) {
+        routerCount = 1;
+    }
+    const ttlValue = document.getElementById('commonTtl')?.value || '';
+    const bufferValue = document.getElementById('commonBufferSize')?.value || '';
+    const seedValue = document.getElementById('rngSeed')?.value || '';
+
+    // Enable batch mode if multiple routers or any field has semicolons
+    const batchMode = (
+        routerCount > 1 ||
+        ttlValue.includes(';') ||
+        bufferValue.includes(';') ||
+        seedValue.includes(';')
+    );
+
     const compile = document.getElementById("compile").checked;
     const enableML = document.getElementById("enableMachineLearning")?.checked || false;
 
@@ -1655,7 +1877,7 @@ ${interfaceName}.transmitRange = ${transmitRange}
     const tagifyInput = document.getElementById("commonRouter");
     const tagifyValue = JSON.parse(tagifyInput.value);
     const CommoNrouter = `[${tagifyValue.map(tag => tag.value).join("; ")}]`;
-    const routerCount = tagifyValue.length;
+    // routerCount already computed above for batch mode detection
     const CommoNbufferSize = document.getElementById("commonBufferSize").value;
     const commonRouteFile = document.getElementById("commonRouteFile");
     const CommoNwaitTime = document.getElementById("commonWaitTime").value;
@@ -2138,6 +2360,100 @@ function browseDirectory(inputId) {
 // DYNAMIC TABLE HELPERS FOR POST-PROCESSING CONFIGS
 // ============================================================
 
+// Colors for pattern preview (matching the static section)
+const PATTERN_COLORS = {
+    scenario_name: '#fbbf24',
+    router: '#34d399',
+    seed: '#60a5fa',
+    ttl: '#f472b6',
+    report_type: '#c084fc',
+    default: '#94a3b8'
+};
+
+// Update the pattern preview based on current components
+function updatePatternPreview() {
+    const tbody = document.getElementById('batchComponentsBody');
+    const previewContainer = document.getElementById('dynamicPatternPreview');
+    const positionsContainer = document.getElementById('dynamicPatternPositions');
+
+    if (!tbody || !previewContainer) return;
+
+    // Collect components from table
+    const components = [];
+    tbody.querySelectorAll('tr').forEach(row => {
+        const nameInput = row.querySelector('input[data-field="name"]');
+        const posInput = row.querySelector('input[data-field="position"]');
+        if (nameInput && posInput) {
+            components.push({
+                name: nameInput.value || 'unknown',
+                position: parseInt(posInput.value) || 0
+            });
+        }
+    });
+
+    // Sort by position
+    components.sort((a, b) => a.position - b.position);
+
+    // Get delimiter
+    const delimiterInput = document.getElementById('batchDelimiter');
+    const delimiter = delimiterInput ? delimiterInput.value || '_' : '_';
+
+    // Build pattern preview
+    let patternHtml = '';
+    let exampleHtml = '→ ';
+
+    const exampleValues = {
+        scenario_name: 'default_scenario',
+        router: 'EpidemicRouter',
+        seed: '1',
+        ttl: '300',
+        report_type: 'MessageStatsReport'
+    };
+
+    components.forEach((comp, idx) => {
+        const color = PATTERN_COLORS[comp.name] || PATTERN_COLORS.default;
+        const displayName = comp.name.charAt(0).toUpperCase() + comp.name.slice(1).replace(/_/g, ' ');
+        const exampleValue = exampleValues[comp.name] || comp.name;
+
+        if (idx > 0) {
+            patternHtml += delimiter;
+            exampleHtml += delimiter;
+        }
+        patternHtml += `<span style="color: ${color};">${displayName}</span>`;
+        exampleHtml += `<span style="color: ${color};">${exampleValue}</span>`;
+    });
+
+    patternHtml += '.txt';
+    exampleHtml += '.txt';
+
+    previewContainer.innerHTML = `
+        <div style="color: ${delimiter === '_' ? '#e2e8f0' : '#fbbf24'}; font-weight: bold; margin-bottom: 5px;">
+            Pattern: ${patternHtml}
+        </div>
+        <div style="font-size: 12px; color: #94a3b8;">
+            ${exampleHtml}
+        </div>
+    `;
+
+    // Update positions container
+    if (positionsContainer) {
+        let positionsHtml = '';
+        components.forEach(comp => {
+            const color = PATTERN_COLORS[comp.name] || PATTERN_COLORS.default;
+            const displayName = comp.name.charAt(0).toUpperCase() + comp.name.slice(1).replace(/_/g, ' ');
+            positionsHtml += `
+                <div style="background: white; padding: 10px; border-radius: 6px; border-left: 3px solid ${color};">
+                    <strong>Position ${comp.position}:</strong> ${displayName}
+                </div>
+            `;
+        });
+        positionsContainer.innerHTML = positionsHtml;
+    }
+}
+
+// Make it globally available
+window.updatePatternPreview = updatePatternPreview;
+
 // Add a component row to the batch components table
 function addBatchComponent(name = '', position = 0) {
     const tbody = document.getElementById('batchComponentsBody');
@@ -2145,8 +2461,8 @@ function addBatchComponent(name = '', position = 0) {
 
     const row = document.createElement('tr');
     row.innerHTML = `
-        < td ><input type="text" data-field="name" value="${name}" placeholder="e.g., router"></td>
-        <td><input type="number" data-field="position" value="${position}" min="0"></td>
+        <td><input type="text" data-field="name" value="${name}" placeholder="e.g., router" onchange="updatePatternPreview()"></td>
+        <td><input type="number" data-field="position" value="${position}" min="0" onchange="updatePatternPreview()"></td>
         <td>
             <button type="button" class="remove-button" onclick="removeDynamicRow(this)" style="padding: 4px 8px;">
                 <i class="fas fa-trash"></i>
@@ -2164,7 +2480,7 @@ function addBatchAverageGroup(name = '', groupBy = '', minFiles = 2, outputTempl
     const groupByStr = Array.isArray(groupBy) ? groupBy.join(', ') : groupBy;
     const row = document.createElement('tr');
     row.innerHTML = `
-        < td ><input type="text" data-field="name" value="${name}" placeholder="e.g., ttl_group"></td>
+        <td><input type="text" data-field="name" value="${name}" placeholder="e.g., ttl_group"></td>
         <td><input type="text" data-field="groupBy" value="${groupByStr}" placeholder="e.g., report_type, router, ttl"></td>
         <td><input type="number" data-field="minFiles" value="${minFiles}" min="1" style="width: 60px;"></td>
         <td><input type="text" data-field="outputTemplate" value="${outputTemplate}" placeholder="e.g., {report_type}_{router}_{ttl}_{grouping_type}_average.txt"></td>
@@ -2209,7 +2525,174 @@ function loadAllConfigs() {
     loadAnalysisConfig();
     loadBatchConfig();
     loadRegressionConfig();
+
+    // Setup auto-save after configs are loaded
+    setTimeout(setupAutoSave, 1000);
 }
+
+// ============================================================================
+// AUTO-SAVE FUNCTIONALITY - Saves config changes automatically
+// ============================================================================
+
+let autoSaveTimer = null;
+let lastSaveStatus = null;
+
+// Debounce function to avoid too many saves
+function debounce(func, wait) {
+    return function executedFunction(...args) {
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+// Show save status indicator
+function showSaveStatus(message, isSuccess) {
+    // Create or find status element
+    let statusEl = document.getElementById('autoSaveStatus');
+    if (!statusEl) {
+        statusEl = document.createElement('div');
+        statusEl.id = 'autoSaveStatus';
+        statusEl.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 9999;
+            transition: opacity 0.3s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
+        document.body.appendChild(statusEl);
+    }
+
+    statusEl.textContent = message;
+    statusEl.style.backgroundColor = isSuccess ? '#10b981' : '#ef4444';
+    statusEl.style.color = 'white';
+    statusEl.style.opacity = '1';
+
+    // Fade out after 2 seconds
+    setTimeout(() => {
+        statusEl.style.opacity = '0';
+    }, 2000);
+}
+
+// Auto-save all post-processing configs
+const autoSaveConfigs = debounce(function () {
+    console.log('Auto-saving configs...');
+
+    // Save all three configs
+    Promise.all([
+        saveAnalysisConfigSilent(),
+        saveBatchConfigSilent(),
+        saveRegressionConfigSilent()
+    ]).then(results => {
+        const allSuccess = results.every(r => r === true);
+        if (allSuccess) {
+            showSaveStatus('✓ Settings saved', true);
+        } else {
+            showSaveStatus('⚠ Some settings failed to save', false);
+        }
+    }).catch(error => {
+        console.error('Auto-save error:', error);
+        showSaveStatus('✗ Save failed', false);
+    });
+}, 1000); // Wait 1 second after last change before saving
+
+// Silent save functions (no alerts)
+function saveAnalysisConfigSilent() {
+    return fetch('/api/config/analysis')
+        .then(response => response.json())
+        .then(config => {
+            // Update directories - use batchFolder as the shared report directory
+            config.directories = config.directories || {};
+            config.directories.report_dir = document.getElementById('batchFolder')?.value || 'reports/';
+            config.directories.plots_dir = document.getElementById('analysisPlotsDir')?.value || 'plots/';
+
+            // Update other fields - sync from shared inputs
+            config.data_separator = document.getElementById('batchDataSeparator')?.value || ':';
+            config.report_extension = document.getElementById('batchExtension')?.value || '.txt';
+
+            return fetch('/api/config/analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+        })
+        .then(response => response.json())
+        .then(data => data.success)
+        .catch(() => false);
+}
+
+function saveBatchConfigSilent() {
+    return fetch('/api/config/averager')
+        .then(response => response.json())
+        .then(config => {
+            config.folder = document.getElementById('batchFolder')?.value || 'reports/';
+            config.file_filter = config.file_filter || {};
+            config.file_filter.extension = document.getElementById('batchExtension')?.value || '.txt';
+            config.file_filter.contains = document.getElementById('batchFileContains')?.value || '';
+            config.filename_pattern = config.filename_pattern || {};
+            config.filename_pattern.delimiter = document.getElementById('batchDelimiter')?.value || '_';
+            config.data_separator = document.getElementById('batchDataSeparator')?.value || ':';
+            config.output = config.output || {};
+            config.output.precision = parseInt(document.getElementById('batchPrecision')?.value) || 4;
+
+            return fetch('/api/config/averager', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+        })
+        .then(response => response.json())
+        .then(data => data.success)
+        .catch(() => false);
+}
+
+function saveRegressionConfigSilent() {
+    return fetch('/api/config/regression')
+        .then(response => response.json())
+        .then(config => {
+            config.input = config.input || {};
+            config.input.csv_directory = document.getElementById('regressionCsvDir')?.value || 'plots/';
+            config.output = config.output || {};
+            config.output.directory = document.getElementById('regressionOutputDir')?.value || 'regression_results/';
+            config.features = config.features || {};
+            config.features.target = document.getElementById('regressionTarget')?.value || 'delivery_prob';
+            config.features.selection_mode = document.getElementById('regressionSelectionMode')?.value || 'manual';
+            config.features.normalize = document.getElementById('regressionNormalize')?.checked ?? true;
+            config.model_settings = config.model_settings || {};
+            config.model_settings.split_settings = config.model_settings.split_settings || {};
+            config.model_settings.split_settings.train_size = parseFloat(document.getElementById('regressionTrainSize')?.value) || 0.75;
+            config.model_settings.split_settings.random_state = parseInt(document.getElementById('regressionRandomState')?.value) || 5;
+
+            return fetch('/api/config/regression', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+        })
+        .then(response => response.json())
+        .then(data => data.success)
+        .catch(() => false);
+}
+
+// Setup auto-save listeners on all post-processing form inputs
+function setupAutoSave() {
+    const postProcessingDiv = document.getElementById('PostProcessing');
+    if (!postProcessingDiv) return;
+
+    // Listen for changes on all input types
+    const inputs = postProcessingDiv.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('change', autoSaveConfigs);
+        input.addEventListener('input', autoSaveConfigs);
+    });
+
+    console.log('Auto-save enabled for', inputs.length, 'fields');
+}
+
+
 
 // Analysis Config
 function loadAnalysisConfig() {
@@ -2378,6 +2861,9 @@ function loadBatchConfig() {
                     );
                 });
             }
+
+            // Update the pattern preview after loading
+            setTimeout(() => updatePatternPreview(), 100);
         })
         .catch(error => console.error('Failed to load batch config:', error));
 }
@@ -2644,12 +3130,284 @@ function processData() {
 
 // Auto-load configs when Post-Processing tab is displayed
 document.addEventListener('DOMContentLoaded', function () {
-    // Watch for tab changes to load configs when Post-Processing tab opens
+    // Load configs immediately on page load so defaults are ready
+    // This ensures Run ONE works even if user doesn't visit Post-Processing tab
+    setTimeout(() => {
+        loadAllConfigs();
+    }, 500); // Small delay to ensure DOM is fully ready
+
+    // Track current tab to detect when leaving Config tab
+    let currentTab = 'ScenarioSettings';
+
+    // Also reload when Post-Processing tab opens (to refresh if needed)
     const originalOpenTab = window.openTab;
     window.openTab = function (evt, tabName) {
+        // Save configs when LEAVING the PostProcessing (Config) tab
+        if (currentTab === 'PostProcessing' && tabName !== 'PostProcessing') {
+            console.log('Leaving Config tab - saving all configs...');
+            // Save all configs immediately (not debounced)
+            if (typeof saveBatchConfigSilent === 'function') saveBatchConfigSilent();
+            if (typeof saveAnalysisConfigSilent === 'function') saveAnalysisConfigSilent();
+            if (typeof saveRegressionConfigSilent === 'function') saveRegressionConfigSilent();
+        }
+
+        // Call original tab switch
         originalOpenTab(evt, tabName);
-        if (tabName === 'PostProcessing') {
+
+        // Only reload configs when ENTERING PostProcessing fresh (not when already there)
+        if (tabName === 'PostProcessing' && currentTab !== 'PostProcessing') {
             loadAllConfigs();
         }
+
+        // Update current tab tracker
+        currentTab = tabName;
     };
 });
+
+// ============================================================
+// STANDALONE POST-PROCESSING FUNCTIONS
+// ============================================================
+
+/**
+ * Run a single post-processing step (averager, analysis, or regression)
+ */
+async function runPostProcessingStep(step) {
+    const logDiv = document.getElementById('postProcessingOutput');
+    const logPre = document.getElementById('postProcessingLog');
+
+    // Show output area
+    if (logDiv) logDiv.style.display = 'block';
+    if (logPre) logPre.textContent = `Running ${step}...\n`;
+
+    const endpoints = {
+        'averager': '/api/run-averager',
+        'analysis': '/api/run-analysis',
+        'regression': '/api/run-regression'
+    };
+
+    const endpoint = endpoints[step];
+    if (!endpoint) {
+        if (logPre) logPre.textContent += `Unknown step: ${step}\n`;
+        return;
+    }
+
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            if (logPre) {
+                logPre.textContent += `✓ ${data.message}\n`;
+                if (data.output) {
+                    logPre.textContent += `\n--- Output ---\n${data.output}\n`;
+                }
+            }
+            showSaveStatus(`✓ ${step} completed`, true);
+        } else {
+            if (logPre) {
+                logPre.textContent += `✗ ${data.message}\n`;
+                if (data.output) {
+                    logPre.textContent += `\n--- Error ---\n${data.output}\n`;
+                }
+            }
+            showSaveStatus(`✗ ${step} failed`, false);
+        }
+    } catch (error) {
+        console.error(`Error running ${step}:`, error);
+        if (logPre) logPre.textContent += `✗ Error: ${error.message}\n`;
+        showSaveStatus(`✗ ${step} error`, false);
+    }
+}
+
+/**
+ * Run all post-processing steps in sequence
+ */
+async function runAllPostProcessing() {
+    const logDiv = document.getElementById('postProcessingOutput');
+    const logPre = document.getElementById('postProcessingLog');
+
+    // Show output area
+    if (logDiv) logDiv.style.display = 'block';
+    if (logPre) logPre.textContent = 'Starting all post-processing...\n\n';
+
+    const steps = ['averager', 'analysis', 'regression'];
+    let allSuccess = true;
+
+    for (const step of steps) {
+        if (logPre) logPre.textContent += `→ Running ${step}...\n`;
+
+        try {
+            const response = await fetch(`/api/run-${step}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                if (logPre) logPre.textContent += `  ✓ ${data.message}\n`;
+            } else {
+                if (logPre) logPre.textContent += `  ✗ ${data.message}\n`;
+                allSuccess = false;
+                // Continue to next step even if one fails
+            }
+        } catch (error) {
+            if (logPre) logPre.textContent += `  ✗ Error: ${error.message}\n`;
+            allSuccess = false;
+        }
+    }
+
+    if (logPre) logPre.textContent += `\n${allSuccess ? '✓ All steps completed!' : '⚠ Some steps failed'}`;
+    showSaveStatus(allSuccess ? '✓ Post-processing complete' : '⚠ Post-processing had errors', allSuccess);
+}
+
+// Make functions globally available
+window.runPostProcessingStep = runPostProcessingStep;
+window.runAllPostProcessing = runAllPostProcessing;
+
+// ============================================================
+// FILENAME PRESET WIZARD
+// ============================================================
+
+/**
+ * Apply a filename pattern preset - auto-configures ALL related settings
+ * This makes it completely effortless for beginners - one click does everything
+ */
+function applyFilenamePreset(presetName) {
+    const presets = {
+        'standard': {
+            // Filename components (what each part of filename means)
+            components: {
+                'scenario_name': 0,
+                'router': 1,
+                'seed': 2,
+                'ttl': 3,
+                'buffer': 4,
+                'report_type': 5
+            },
+            // Analysis position settings
+            positions: {
+                report_type: 5,
+                router: 1,
+                grouping_type: 3  // TTL position for grouping in plots
+            },
+            // Average groups: Group by ALL parameters EXCEPT seed
+            // This averages results across random seeds for the same configuration
+            averageGroups: [
+                {
+                    name: 'config_average',
+                    // Group by: report_type + router + ttl + buffer
+                    // This averages all seeds for the same TTL+Buffer+Router combo
+                    groupBy: ['report_type', 'router', 'ttl', 'buffer'],
+                    minFiles: 2,
+                    outputTemplate: '{report_type}_{router}_{ttl}_{buffer}_average.txt'
+                }
+            ],
+            example: 'Scenario_Router_Seed_TTL_Buffer_Report.txt'
+        },
+        'simple': {
+            components: {
+                'report_type': 0,
+                'router': 1,
+                'seed': 2
+            },
+            positions: {
+                report_type: 0,
+                router: 1,
+                grouping_type: -1
+            },
+            averageGroups: [
+                {
+                    name: 'router_group',
+                    groupBy: ['report_type', 'router'],
+                    minFiles: 2,
+                    outputTemplate: '{report_type}_{router}_average.txt'
+                }
+            ],
+            example: 'Report_Router_Seed.txt'
+        },
+        'custom': {
+            custom: true
+        }
+    };
+
+    const preset = presets[presetName];
+    if (!preset) return;
+
+    // If custom, just open the advanced settings
+    if (preset.custom) {
+        const advancedDetails = document.querySelector('#postProcessingConfigSection details');
+        if (advancedDetails) {
+            advancedDetails.open = true;
+            advancedDetails.scrollIntoView({ behavior: 'smooth' });
+        }
+        showSaveStatus('📝 Configure your custom pattern below', true);
+        return;
+    }
+
+    // 1. Apply filename components
+    const componentsBody = document.getElementById('batchComponentsBody');
+    if (componentsBody) {
+        componentsBody.innerHTML = '';
+        Object.entries(preset.components).forEach(([name, position]) => {
+            addBatchComponent(name, position);
+        });
+    }
+
+    // 2. Apply average groups (auto-generated!)
+    const groupsBody = document.getElementById('batchAverageGroupsBody');
+    if (groupsBody && preset.averageGroups) {
+        groupsBody.innerHTML = '';
+        preset.averageGroups.forEach(group => {
+            addBatchAverageGroup(
+                group.name,
+                group.groupBy,
+                group.minFiles,
+                group.outputTemplate
+            );
+        });
+    }
+
+    // 3. Apply position settings
+    const reportTypePos = document.getElementById('analysisReportTypePos');
+    const routerPos = document.getElementById('analysisRouterPos');
+    const groupingPos = document.getElementById('analysisGroupingTypePos');
+
+    if (reportTypePos) reportTypePos.value = preset.positions.report_type;
+    if (routerPos) routerPos.value = preset.positions.router;
+    if (groupingPos) groupingPos.value = preset.positions.grouping_type;
+
+    // 4. Update the preview
+    updatePatternPreview();
+
+    // 5. Show success with details
+    const groupCount = preset.averageGroups?.length || 0;
+    showSaveStatus(`✓ Applied "${presetName}" - ${groupCount} averaging rules configured!`, true);
+
+    // 6. Trigger auto-save to persist config
+    if (typeof autoSaveConfigs === 'function') {
+        autoSaveConfigs();
+    }
+}
+
+// Make it globally available
+window.applyFilenamePreset = applyFilenamePreset;
+
+/**
+ * Apply a folder preset from dropdown
+ */
+function applyFolderPreset(inputId, value) {
+    if (value) {
+        document.getElementById(inputId).value = value;
+        // Trigger auto-save
+        if (typeof autoSaveConfigs === 'function') {
+            autoSaveConfigs();
+        }
+    }
+}
+
+// Make it globally available
+window.applyFolderPreset = applyFolderPreset;
+
