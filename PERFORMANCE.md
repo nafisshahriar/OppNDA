@@ -57,22 +57,8 @@ This ensures the system never exceeds 75% RAM usage, leaving headroom for the OS
 
 ### Modifying Parameters
 
-#### Method 1: Environment Variables (Recommended)
 
-```bash
-# Linux/macOS
-export OPPNDA_ETA=0.85
-export OPPNDA_GAMMA=2.5
-export OPPNDA_SAFETY=false
-python run.py
-
-# Windows PowerShell
-$env:OPPNDA_ETA = "0.85"
-$env:OPPNDA_SAFETY = "false"
-python run.py
-```
-
-#### Method 2: Programmatic Override
+#### Method 1: Programmatic Override
 
 ```python
 from core.resource_manager import ResourceManager
@@ -88,7 +74,7 @@ rm = ResourceManager(
 workers = rm.get_optimal_workers(file_paths=my_files)
 ```
 
-#### Method 3: Modify ResourceConfig Class
+#### Method 2: Modify ResourceConfig Class
 
 Edit `core/resource_manager.py`:
 
@@ -239,21 +225,6 @@ rm.log_status()  # Print current memory state
 workers = rm.get_optimal_workers()
 print(f"Using {workers} workers for plot generation")
 ```
-
----
-
-## Benchmarks
-
-Performance measurements on a test system (16GB RAM, 8 cores):
-
-| Files | File Size | Safety ON | Safety OFF | Memory Peak |
-|-------|-----------|-----------|------------|-------------|
-| 100 | 1 MB each | 6 workers | 8 workers | 4.2 GB |
-| 500 | 1 MB each | 4 workers | 8 workers | 6.8 GB |
-| 100 | 10 MB each | 2 workers | 8 workers | 5.1 GB |
-| 500 | 10 MB each | 1 worker | 8 workers | 12.4 GB* |
-
-*Safety OFF: System entered swap, processing time 3× slower
 
 ---
 
