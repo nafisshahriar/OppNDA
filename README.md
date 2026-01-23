@@ -5,7 +5,7 @@
 ![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
 ![Flask](https://img.shields.io/badge/Flask-2.0+-green.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-[![CI](https://github.com/yourusername/oppnda/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/oppnda/actions)
+[![CI](https://github.com/nafisshahriar/oppnda/actions/workflows/ci.yml/badge.svg)](https://github.com/nafisshahriar/oppnda/actions)
 
 ## Features
 
