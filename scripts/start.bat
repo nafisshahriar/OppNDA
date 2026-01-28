@@ -32,6 +32,6 @@ echo.
 echo Starting server at http://localhost:5000
 echo Press Ctrl+C to stop the server.
 echo.
-python "%PROJECT_ROOT%run.py"
+python "%SCRIPT_DIR%run.py"
 
 popd

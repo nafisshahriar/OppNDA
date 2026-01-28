@@ -46,7 +46,7 @@ source venv/bin/activate  # or venv\Scripts\activate on Windows
 pip install -r requirements.txt
 
 # Run application
-python run.py
+python scripts/run.py
 ```
 
 ### Docker
@@ -163,10 +163,8 @@ oppnda/
 │   ├── auto-save.js     # Auto-save manager
 │   ├── settings-modern.css # Modern styling
 │   └── directory-browser.css # Browser styling
-├── scripts/             # Setup and launcher scripts
+└── scripts/             # Setup and launcher scripts
 ├── examples/            # Example configurations
-├── tests/               # Test suite
-├── run.py               # Entry point
 └── requirements.txt     # Dependencies
 ```
 

@@ -20,7 +20,7 @@ services:
       - FLASK_ENV=production
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/')"]
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/')" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -39,6 +39,6 @@ services:
     environment:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
-    command: ["python", "run.py", "--host", "0.0.0.0", "--port", "5001", "--debug"]
+    command: [ "python", "scripts/run.py", "--host", "0.0.0.0", "--port", "5001", "--debug" ]
     profiles:
       - dev
