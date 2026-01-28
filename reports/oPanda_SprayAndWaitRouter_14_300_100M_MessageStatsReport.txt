@@ -1,0 +1,20 @@
+Message stats for scenario oPanda_SprayAndWaitRouter_14_300_100M
+sim_time: 4500.1000
+created: 151
+started: 5354
+relayed: 4052
+aborted: 1298
+dropped: 0
+removed: 0
+delivered: 49
+delivery_prob: 0.3245
+response_prob: 0.0000
+overhead_ratio: 81.6939
+latency_avg: 1710.4143
+latency_med: 1512.2000
+hopcount_avg: 4.0204
+hopcount_med: 4
+buffertime_avg: NaN
+buffertime_med: NaN
+rtt_avg: NaN
+rtt_med: NaN

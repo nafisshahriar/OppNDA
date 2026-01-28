@@ -5,9 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scenario Settings</title>
-    <link rel="stylesheet" href="/GUI/settings.css"> <!-- Add this line -->
+    <link rel="stylesheet" href="/GUI/settings.css">
+    <link rel="stylesheet" href="/GUI/styles.css">
+    <link rel="stylesheet" href="/GUI/directory-browser.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-    <!-- Add this line -->
     <link rel="icon" href="/GUI/images/oppnda_logo.png" type="image/png">
     <!-- Tagify CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">
@@ -1157,74 +1158,13 @@
         <p style="color: #64748b; margin-bottom: 20px;">Configure batch processing, analysis, and regression settings.
             Changes are saved automatically.</p>
 
-        <!-- Filename Pattern - Beginner Friendly -->
-        <fieldset id="filenamePatternSection"
-            style="margin-bottom: 20px; background: linear-gradient(135deg, #f0f9ff 0%, #f8fafc 100%);">
-            <legend><i class="fas fa-magic"></i> Quick Setup</legend>
-            <div style="padding: 10px;">
-                <p style="color: #475569; margin-bottom: 15px;">
-                    <strong>Choose how your ONE report files are named:</strong>
-                </p>
-
-                <!-- Preset Buttons -->
-                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
-                    <button type="button" class="preset-button" onclick="applyFilenamePreset('standard')"
-                        style="flex: 1; min-width: 200px; padding: 15px; border: 2px solid #3b82f6; background: white; border-radius: 8px; cursor: pointer; text-align: left;">
-                        <div style="font-weight: bold; color: #1e40af;"><i class="fas fa-star"></i> Standard
-                            (Recommended)</div>
-                        <div style="font-size: 12px; color: #64748b; margin-top: 5px;">
-                            Scenario_Router_Seed_TTL_Buffer_Report.txt
-                        </div>
-                    </button>
-                    <button type="button" class="preset-button" onclick="applyFilenamePreset('simple')"
-                        style="flex: 1; min-width: 200px; padding: 15px; border: 2px solid #10b981; background: white; border-radius: 8px; cursor: pointer; text-align: left;">
-                        <div style="font-weight: bold; color: #059669;"><i class="fas fa-leaf"></i> Simple</div>
-                        <div style="font-size: 12px; color: #64748b; margin-top: 5px;">
-                            Report_Router_Seed.txt
-                        </div>
-                    </button>
-                    <button type="button" class="preset-button" onclick="applyFilenamePreset('custom')"
-                        style="flex: 1; min-width: 200px; padding: 15px; border: 2px solid #8b5cf6; background: white; border-radius: 8px; cursor: pointer; text-align: left;">
-                        <div style="font-weight: bold; color: #7c3aed;"><i class="fas fa-sliders-h"></i> Custom</div>
-                        <div style="font-size: 12px; color: #64748b; margin-top: 5px;">
-                            Define your own pattern
-                        </div>
-                    </button>
-                </div>
-
-                <!-- Live Preview -->
-                <div id="dynamicPatternPreview"
-                    style="background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 8px; font-family: monospace;">
-                    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 8px;">YOUR FILES LOOK LIKE:</div>
-                    <div style="font-size: 13px; word-break: break-all;">
-                        <span style="color: #fbbf24;">Scenario</span><span style="color: #64748b;">_</span><span
-                            style="color: #34d399;">Router</span><span style="color: #64748b;">_</span><span
-                            style="color: #60a5fa;">Seed</span><span style="color: #64748b;">_</span><span
-                            style="color: #f472b6;">TTL</span><span style="color: #64748b;">_</span><span
-                            style="color: #fb923c;">Buffer</span><span style="color: #64748b;">_</span><span
-                            style="color: #c084fc;">Report</span><span style="color: #94a3b8;">.txt</span>
-                    </div>
-                </div>
-
-                <!-- Position Legend (simple) -->
-                <div id="dynamicPatternPositions"
-                    style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; font-size: 12px;">
-                    <span style="background: #fef3c7; padding: 4px 8px; border-radius: 4px;">0: Scenario</span>
-                    <span style="background: #d1fae5; padding: 4px 8px; border-radius: 4px;">1: Router</span>
-                    <span style="background: #dbeafe; padding: 4px 8px; border-radius: 4px;">2: Seed</span>
-                    <span style="background: #fce7f3; padding: 4px 8px; border-radius: 4px;">3: TTL</span>
-                    <span style="background: #fed7aa; padding: 4px 8px; border-radius: 4px;">4: Buffer</span>
-                    <span style="background: #ede9fe; padding: 4px 8px; border-radius: 4px;">5: Report</span>
-                </div>
-
-                <p style="color: #64748b; font-size: 12px; margin-top: 15px;">
-                    <i class="fas fa-lightbulb" style="color: #fbbf24;"></i>
-                    <strong>Tip:</strong> Just click a preset above! OppNDA will auto-configure everything to match your
-                    files.
-                </p>
+        <!-- File Pattern Builder - Simple Version -->
+        <fieldset id="filenamePatternSection" style="margin-bottom: 20px;">
+            <legend><i class="fas fa-layer-group"></i> File Naming Pattern Builder</legend>
+            <div id="patternBuilderContainer" style="padding: 20px;">
+                <!-- Container will be filled by pattern-builder.js -->
             </div>
         </fieldset>
-
 
         <!-- Unified Post-Processing Settings -->
         <fieldset id="postProcessingConfigSection">
@@ -1269,13 +1209,7 @@
                         </label>
                         <input type="text" id="batchExtension" name="extension" value=".txt" placeholder=".txt">
                     </div>
-                    <div class="form-group">
-                        <label for="batchDelimiter"
-                            data-tooltip="Character that separates filename parts. E.g., in 'Scenario_Router_1_300.txt' the delimiter is '_'">
-                            Filename Delimiter:
-                        </label>
-                        <input type="text" id="batchDelimiter" name="delimiter" value="_" placeholder="_" maxlength="5">
-                    </div>
+
                     <div class="form-group">
                         <label for="batchDataSeparator"
                             data-tooltip="Character separating keys from values inside report files. Usually ':' (e.g., 'delivery_prob: 0.85')">
@@ -1342,7 +1276,6 @@
                             <th>Group Name</th>
                             <th>Group By</th>
                             <th>Min Files</th>
-                            <th>Output Template</th>
                             <th style="width: 60px;">Action</th>
                         </tr>
                     </thead>
@@ -1358,26 +1291,7 @@
                 <details class="advanced-settings">
                     <summary><i class="fas fa-cog"></i> Advanced Settings</summary>
                     <div class="advanced-content">
-                        <h4 style="margin: 15px 0 10px;">Filename Pattern Components</h4>
-                        <p style="color: #64748b; font-size: 13px; margin-bottom: 10px;">
-                            Define what each position in the filename represents (separated by delimiter)
-                        </p>
-                        <table class="dynamic-table" id="batchComponentsTable">
-                            <thead>
-                                <tr>
-                                    <th>Component Name</th>
-                                    <th>Position</th>
-                                    <th style="width: 60px;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="batchComponentsBody">
-                                <!-- Dynamic rows will be added here -->
-                            </tbody>
-                        </table>
-                        <button type="button" class="add-button" style="margin-top: 10px;"
-                            onclick="addBatchComponent()">
-                            <i class="fas fa-plus"></i> Add Component
-                        </button>
+                        <!-- Pattern Components moved to Pattern Builder - hidden for consistency -->
 
                         <!-- Plot thresholds now hidden with defaults -->
                         <input type="hidden" id="analysisMinValuesLine" name="min_values_line" value="2">
@@ -1580,6 +1494,7 @@
         </fieldset>
     </div>
 
+    <script src="/GUI/pattern-builder.js"></script>
     <script src="/GUI/config.js"></script>
 
     <!-- WKT Form JavaScript -->
@@ -1651,6 +1566,15 @@
             }
         });
     </script>
+
+    <!-- Directory Browser Component -->
+    <script src="/GUI/directory-browser.js"></script>
+
+    <!-- Auto-Save Manager -->
+    <script src="/GUI/auto-save.js"></script>
+
+    <!-- Pattern Builder Component -->
+    <script src="/GUI/pattern-builder.js"></script>
 </body>
 
 </html>

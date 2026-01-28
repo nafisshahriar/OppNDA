@@ -26,12 +26,12 @@ class ResourceConfig:
     """Configuration for resource management parameters."""
     
     # Default values - can be overridden
-    ETA = 0.75              # η: RAM utilization threshold (75%)
+    ETA = 0.90              # η: RAM utilization threshold (90%)
     GAMMA = 3.0             # γ: DataFrame expansion factor
     M_OVERHEAD_MB = 50      # Per-worker overhead in MB
     MIN_WORKERS = 1         # Minimum worker count
-    MAX_WORKERS = 16        # Maximum worker count (hard cap)
-    FALLBACK_WORKERS = 4    # Used when safety is disabled or psutil unavailable
+    MAX_WORKERS = 32        # Maximum worker count (hard cap)
+    FALLBACK_WORKERS = 8    # Used when safety is disabled or psutil unavailable
     
     # Safety can be disabled if needed
     SAFETY_ENABLED = True

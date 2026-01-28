@@ -13,38 +13,15 @@ import re
 import numpy as np
 import json
 import sys
-from pathlib import Path
 from collections import defaultdict
 from multiprocessing import Pool
 import traceback
 import time
 
-# Cross-platform path resolution
-SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_DIR.parent
-CONFIG_DIR = PROJECT_ROOT / 'config'
-
-# Ensure project root is in python path for imports
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.append(str(PROJECT_ROOT))
-
-# Import resource manager for dynamic worker optimization
-try:
-    from core.resource_manager import ResourceManager, get_optimal_workers
-    RESOURCE_MANAGER_AVAILABLE = True
-except ImportError as e:
-    print(f"Warning: Resource Manager import failed: {e}")
-    RESOURCE_MANAGER_AVAILABLE = False
-
-def load_config(config_path=None):
-    """Load configuration from JSON file (cross-platform)"""
-    if config_path is None:
-        config_path = CONFIG_DIR / "analysis_config.json"
-    else:
-        config_path = Path(config_path)
-    
+def load_config(config_path="analysis_config.json"):
+    """Load configuration from JSON file"""
     try:
-        with open(config_path, 'r', encoding='utf-8') as f:
+        with open(config_path, 'r') as f:
             return json.load(f)
     except FileNotFoundError:
         print(f"ERROR: Config file '{config_path}' not found")
@@ -93,6 +70,7 @@ class SmartFileParser:
             print(f"  Debug: Parsing {filename}")
             print(f"    Parts: {parts} (Delimiter: '{self.config['filename_structure']['delimiter']}')")
             self._debug_count += 1
+
         
         if len(parts) < 3:
             return None
@@ -131,6 +109,7 @@ class SmartFileParser:
                         except ValueError:
                             parsed['value'] = parts[pos]
             
+            return parsed
             return parsed
         except (IndexError, KeyError) as e:
             print(f"  Debug: Failed to parse average file {filename}: {e}")
@@ -209,9 +188,9 @@ class DataOrganizer:
         Merges data from multiple report types based on router, grouping_type, and value
         Returns: dict of {grouping_type: DataFrame}
         """
-        print("\n" + "="*70, flush=True)
-        print("LOADING AVERAGED FILES", flush=True)
-        print("="*70, flush=True)
+        print("\n" + "="*70)
+        print("LOADING AVERAGED FILES")
+        print("="*70)
         
         grouped_averages = defaultdict(lambda: defaultdict(list))
         total_files = 0
@@ -299,9 +278,9 @@ class DataOrganizer:
         Load raw (non-averaged) files
         Merges data from multiple report types based on common keys
         """
-        print("\n" + "="*70, flush=True)
-        print("LOADING RAW FILES", flush=True)
-        print("="*70, flush=True)
+        print("\n" + "="*70)
+        print("LOADING RAW FILES")
+        print("="*70)
         
         # Group by common identifier (router, seed, etc.)
         grouped_raw = defaultdict(list)
@@ -463,17 +442,13 @@ class PlotGenerator:
             
             output_path = os.path.join(self.output_dir, f"{metric}_{grouping_type}_line.png")
             fig.tight_layout()
-            output_path = os.path.join(self.output_dir, f"{metric}_{grouping_type}_line.png")
-            fig.tight_layout()
-            dpi = self.config['plot_settings'].get('general', {}).get('dpi', 150)
-            fig.savefig(output_path, dpi=dpi, bbox_inches='tight', facecolor='white')
-            plt.close(fig)
+            fig.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
             plt.close(fig)
             
-            print(f"  [OK] Line: {metric} vs {x_label}", flush=True)
+            print(f"  ✓ Line: {metric} vs {x_label}")
             return True
         except Exception as e:
-            print(f"  [FAIL] Line plot failed: {e}")
+            print(f"  ✗ Line plot failed: {e}")
             import traceback
             traceback.print_exc()
             plt.close('all')
@@ -546,18 +521,14 @@ class PlotGenerator:
                 
                 output_path = os.path.join(self.output_dir, f"{router}_{metric}_3d_{type1}_{type2}.png")
                 fig.tight_layout()
-                output_path = os.path.join(self.output_dir, f"{router}_{metric}_3d_{type1}_{type2}.png")
-                fig.tight_layout()
-                dpi = self.config['plot_settings'].get('general', {}).get('dpi', 150)
-                fig.savefig(output_path, dpi=dpi, bbox_inches='tight')
-                plt.close(fig)
+                fig.savefig(output_path, dpi=300, bbox_inches='tight')
                 plt.close(fig)
                 
-                print(f"  [OK] Surface: {router} {metric} ({x_label} vs {y_label})", flush=True)
+                print(f"  ✓ Surface: {router} {metric} ({x_label} vs {y_label})")
             
             return True
         except Exception as e:
-            print(f"  [FAIL] Surface plot failed: {e}")
+            print(f"  ✗ Surface plot failed: {e}")
             plt.close('all')
             return False
     
@@ -593,14 +564,13 @@ class PlotGenerator:
             
             output_path = os.path.join(self.output_dir, f"violin_{grouping_type}_{metric}.png")
             fig.tight_layout()
-            dpi = self.config['plot_settings'].get('general', {}).get('dpi', 150)
-            fig.savefig(output_path, dpi=dpi, bbox_inches='tight')
+            fig.savefig(output_path, dpi=300, bbox_inches='tight')
             plt.close(fig)
             
-            print(f"  [OK] Violin: {metric} ({grouping_type})", flush=True)
+            print(f"  ✓ Violin: {metric} ({grouping_type})")
             return True
         except Exception as e:
-            print(f"  [FAIL] Violin plot failed: {e}")
+            print(f"  ✗ Violin plot failed: {e}")
             plt.close('all')
             return False
     
@@ -629,14 +599,13 @@ class PlotGenerator:
             
             output_path = os.path.join(output_dir, f"{router}_correlation.png")
             fig.tight_layout()
-            dpi = self.config['plot_settings'].get('general', {}).get('dpi', 150)
-            fig.savefig(output_path, dpi=dpi, bbox_inches='tight')
+            fig.savefig(output_path, dpi=300, bbox_inches='tight')
             plt.close(fig)
             
-            print(f"  [OK] Heatmap: {router}", flush=True)
+            print(f"  ✓ Heatmap: {router}")
             return True
         except Exception as e:
-            print(f"  [FAIL] Heatmap failed: {e}")
+            print(f"  ✗ Heatmap failed: {e}")
             plt.close('all')
             return False
     
@@ -662,16 +631,13 @@ class PlotGenerator:
                     ax.grid(False)
             
             output_path = os.path.join(output_dir, "pairplot.png")
-            output_path = os.path.join(output_dir, "pairplot.png")
-            dpi = settings.get('general', {}).get('dpi', 150)
-            g.fig.savefig(output_path, dpi=dpi, bbox_inches='tight')
-            plt.close(g.fig)
+            g.fig.savefig(output_path, dpi=300, bbox_inches='tight')
             plt.close(g.fig)
             
-            print(f"  [OK] Pairplot", flush=True)
+            print(f"  ✓ Pairplot")
             return True
         except Exception as e:
-            print(f"  [FAIL] Pairplot failed: {e}")
+            print(f"  ✗ Pairplot failed: {e}")
             plt.close('all')
             return False
 
@@ -702,9 +668,9 @@ def main():
     else:
         config = load_config()
     
-    print("="*70, flush=True)
-    print("OppNDA - Visual Dispatcher", flush=True)
-    print("="*70, flush=True)
+    print("="*70)
+    print("SMART ADAPTIVE ANALYSIS TOOL")
+    print("="*70)
     
     # Setup
     parser = SmartFileParser(config)
@@ -719,9 +685,9 @@ def main():
     raw_df = organizer.load_raw_files()
     
     # Analyze and determine strategy
-    print("\n" + "="*70, flush=True)
-    print("ANALYZING DATA", flush=True)
-    print("="*70, flush=True)
+    print("\n" + "="*70)
+    print("ANALYZING DATA")
+    print("="*70)
     
     avg_strategy = strategy_analyzer.analyze_averaged_data(averaged_dfs)
     
@@ -773,35 +739,22 @@ def main():
         plot_jobs.append(job)
     
     # Execute plots
-    print("\n" + "="*70, flush=True)
-    print(f"GENERATING VISUALIZATIONS", flush=True)
-    print("="*70, flush=True)
+    print("\n" + "="*70)
+    print(f"GENERATING VISUALIZATIONS")
+    print("="*70)
     
     if plot_jobs:
         print(f"Processing {len(plot_jobs)} plots...")
         start_time = time.time()
-        
-        # Dynamic worker calculation using ResourceManager
-        if RESOURCE_MANAGER_AVAILABLE:
-            rm = ResourceManager(safety_enabled=True)
-            num_processes = min(rm.get_optimal_workers(), len(plot_jobs))
-            print(f"  Optimized Workers: {num_processes} (based on RAM/CPU)")
-            # rm.log_status()
-        else:
-            num_processes = min(4, len(plot_jobs))
-            print(f"  Workers: {num_processes} (static)")
+        num_processes = min(4, len(plot_jobs))
         
         with Pool(processes=num_processes) as pool:
-            # Use imap_unordered to allow real-time output (if workers print)
-            # We iterate to drive the execution
-            for result in pool.imap_unordered(execute_plot_job, plot_jobs):
-                pass
+            results = pool.map(execute_plot_job, plot_jobs)
         
-        # We can't easily count successes with void returns if we don't capture them, 
-        # but the workers print [OK]/[FAIL].
-        # For simplicity, we'll just say completed.
+        successful = sum(1 for r in results if r)
         elapsed = time.time() - start_time
-        print(f"Completed plot generation in {elapsed:.2f}s", flush=True)
+        
+        print(f"Completed {successful}/{len(plot_jobs)} plots in {elapsed:.2f}s")
     
     # Export CSV from raw data
     if config['enabled_plots']['export_csv'] and raw_df is not None and 'router' in raw_df.columns:

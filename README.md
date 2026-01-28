@@ -1,4 +1,5 @@
-# OppNDA
+# OppNDA v2.0 Modern UI
+
 
 **ONE Simulator Network Data Analyzer** — A web-based toolkit for configuring ONE Simulator scenarios and analyzing simulation results.
 
@@ -9,17 +10,19 @@
 
 ## Features
 
+- 🎨 **Modern UI** — Professional, responsive design with Pattern Builder and Directory Browser
 - 🎛️ **Scenario Configuration** — Generate ONE Simulator configuration files through an intuitive web interface
 - 📥 **Config Import** — Import existing ONE .txt config files directly into the GUI
 - ▶️ **Run ONE Pipeline** — Complete simulation workflow: save config → run ONE → auto post-processing
 - 📊 **Report Averaging** — Aggregate raw simulation reports with auto-grouping by router/TTL/buffer
 - 📈 **Visualization Suite** — Generate 3D surfaces, line plots, violin plots, heatmaps, and pair plots
+- 🚀 **Real-time Analysis** — Instant logging and progress feedback during visualization generation
+- 💾 **Auto-Save** — Silent, automatic persistence of configuration changes
+- 🛠️ **Pattern Builder** — Drag-and-drop interface for defining file naming conventions
+- 📂 **Directory Browser** — Safe, absolute-path file navigation for cross-platform compatibility
 - 🤖 **Multi-Target ML** — Train regression models on multiple target variables simultaneously
 - ⚙️ **Flexible Configuration** — JSON-based settings with automatic backup and deep-merge preservation
 - 🧠 **Dynamic Memory Management** — Intelligent worker optimization to prevent swap-thrashing
-- 🚀 **Quick Start Modal** — Guided onboarding with example scenarios (Urban/Campus)
-- 📋 **Live Batch Preview** — Real-time batch count calculation as you configure parameters
-- 💾 **Auto-Save** — Automatic config persistence when switching tabs
 - 🖥️ **Cross-Platform** — Full support for Windows, Linux, and macOS
 
 ## Quick Start
@@ -75,7 +78,7 @@ docker run -p 5000:5000 oppnda
 
 Create ONE Simulator configuration files using the web GUI:
 
-1. Open `http://localhost:5000/settings` in your browser
+1. Open the web interface in your browser
 2. Configure scenario settings (name, duration, world size, etc.)
 3. Add interfaces, groups, events, and reports
 4. Export the configuration file

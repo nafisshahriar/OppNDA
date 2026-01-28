@@ -1,0 +1,20 @@
+Message stats for scenario oPanda_EpidemicRouter_89_300_32M
+sim_time: 4500.1000
+created: 151
+started: 8594
+relayed: 7100
+aborted: 1484
+dropped: 3776
+removed: 0
+delivered: 47
+delivery_prob: 0.3113
+response_prob: 0.0000
+overhead_ratio: 150.0638
+latency_avg: 1680.1106
+latency_med: 1327.6000
+hopcount_avg: 4.1489
+hopcount_med: 4
+buffertime_avg: 1009.8061
+buffertime_med: 680.3000
+rtt_avg: NaN
+rtt_med: NaN

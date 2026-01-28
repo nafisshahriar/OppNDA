@@ -15,18 +15,6 @@ from multiprocessing import Pool, Manager
 import traceback
 import time
 
-# Cross-platform path resolution
-SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_DIR.parent
-CONFIG_DIR = PROJECT_ROOT / 'config'
-
-# Import resource manager for dynamic worker optimization
-try:
-    from core.resource_manager import ResourceManager, get_optimal_workers
-    RESOURCE_MANAGER_AVAILABLE = True
-except ImportError:
-    RESOURCE_MANAGER_AVAILABLE = False
-
 def read_and_parse_file_parallel(args):
     """Worker function for parallel file reading and parsing"""
     filepath, separator, ignore_fields = args
@@ -64,18 +52,10 @@ def average_group_data(aggregated):
     return averaged
 
 class ReportAverager:
-    def __init__(self, config_path, safety_enabled=True):
+    def __init__(self, config_path):
         self.config = self.load_config(config_path)
         self.validate_config()
-        self.safety_enabled = safety_enabled
-        
-        # Dynamic worker calculation using ResourceManager
-        if RESOURCE_MANAGER_AVAILABLE:
-            self.resource_manager = ResourceManager(safety_enabled=safety_enabled)
-            self.num_processes = self.resource_manager.get_optimal_workers()
-        else:
-            # Fallback to static limit
-            self.num_processes = min(4, os.cpu_count() or 1)
+        self.num_processes = min(4, os.cpu_count() or 1)  # Use up to 4 processes
         
     def load_config(self, config_path):
         """Load and parse configuration file"""
@@ -148,7 +128,6 @@ class ReportAverager:
         """Read and parse a report file (legacy, kept for compatibility)"""
         separator = self.config.get('data_separator', ':')
         ignore_fields = set(self.config.get('ignore_fields', []))
-        data = {}
         
         try:
             with open(filepath, 'r') as f:
@@ -290,32 +269,20 @@ class ReportAverager:
         print(f"Processes: {self.num_processes}")
         print(f"Config: {self.config.get('folder')} / Pattern: {self.config.get('filename_pattern')}")
         print("="*70)
-        if RESOURCE_MANAGER_AVAILABLE and hasattr(self, 'resource_manager'):
-            self.resource_manager.log_status()
-        print("="*70)
         
         # Get folder and file filter
         folder = self.config['folder']
         file_filter = self.config.get('file_filter', {})
         extension = file_filter.get('extension', '.txt')
-        
-        # Get report types - support both new array format and legacy single string
-        report_types = self.config.get('report_types', [])
-        if not report_types:
-            # Backward compatibility: use file_filter.contains as single report type
-            legacy_contains = file_filter.get('contains', '')
-            if legacy_contains:
-                report_types = [legacy_contains]
-            else:
-                # No filter specified - process all files as single batch
-                report_types = ['']
-        
-        print(f"\nReport types to process: {report_types if report_types[0] else ['All files']}")
+        contains = file_filter.get('contains', '')
         
         # Validate folder
         if not os.path.exists(folder):
             print(f"ERROR: Folder '{folder}' not found")
             return
+        
+        # Find matching files
+        all_files = []
         
         # Collect all output templates from grouping strategies to exclude them
         exclude_patterns = []
@@ -327,125 +294,97 @@ class ReportAverager:
                 if prefix:
                     exclude_patterns.append(prefix)
         
-        # Track overall stats
-        total_processed = 0
-        total_skipped = 0
-        
-        # Process each report type
-        for report_type in report_types:
-            print(f"\n{'#'*70}")
-            print(f"# REPORT TYPE: {report_type if report_type else 'All Files'}")
-            print(f"{'#'*70}")
-            
-            # Reset debug flag for each report type
-            if hasattr(self, '_debug_shown'):
-                delattr(self, '_debug_shown')
-            if hasattr(self, '_parse_error_shown'):
-                delattr(self, '_parse_error_shown')
-            
-            # Find matching files for this report type
-            all_files = []
-            
-            for file in os.listdir(folder):
-                # Skip if doesn't match extension
-                if not file.endswith(extension):
-                    continue
-                
-                # Skip if doesn't contain report type (if specified)
-                if report_type and report_type not in file:
-                    continue
-                
-                # Skip previously generated average files
-                if "average" in file.lower():
-                    continue
-                
-                # Skip files matching any output template prefix
-                skip = False
-                for prefix in exclude_patterns:
-                    if file.startswith(prefix):
-                        skip = True
-                        break
-                
-                if skip:
-                    continue
-                    
-                all_files.append(os.path.join(folder, file))
-            
-            if not all_files:
-                print(f"No files found for report type '{report_type}' in {folder}")
+        for file in os.listdir(folder):
+            # Skip if doesn't match extension or contains filter
+            if not file.endswith(extension) or contains not in file:
                 continue
             
-            print(f"\nFolder: {folder}")
-            print(f"Files found: {len(all_files)}")
+            # Skip previously generated average files
+            if "average" in file.lower():
+                continue
             
-            # Process each group independently for this report type
-            processed = 0
-            skipped = 0
+            # Skip files matching any output template prefix
+            skip = False
+            for prefix in exclude_patterns:
+                if file.startswith(prefix):
+                    skip = True
+                    break
             
-            for avg_config in self.config.get('average_groups', []):
-                group_name = avg_config['name']
-                group_by = avg_config['group_by']
-                min_files = avg_config.get('min_files', 2)
+            if skip:
+                continue
                 
-                print(f"\n{'='*70}")
-                print(f"PROCESSING: {group_name}")
-                print(f"Grouping by: {', '.join(group_by)}")
-                print(f"Minimum files: {min_files}")
-                print(f"{'='*70}")
-                
-                # Group files for this specific grouping strategy
-                current_groups = self.group_files(all_files, group_by)
-                
-                # Process groups for this strategy
-                for group_key, file_list in sorted(current_groups.items()):
-                    group_dict = dict(zip(group_by, group_key))
-                    
-                    # Count unique files
-                    unique_files = set(filepath for filepath, _ in file_list)
-                    num_files = len(unique_files)
-                    
-                    if num_files < min_files:
-                        print(f"[SKIP] {group_dict} ({num_files} files < {min_files} minimum)")
-                        skipped += 1
-                        continue
-                    
-                    print(f"\n[OK] PROCESS {group_dict}")
-                    print(f"  Files: {num_files}")
-                    
-                    # Average the data
-                    averaged_data = self.average_group(file_list)
-                    
-                    if not averaged_data:
-                        print(f"  Warning: No data to average")
-                        continue
-                    
-                    # Generate output filename using this strategy's template
-                    _, first_components = file_list[0]
-                    output_template = avg_config['output_template']
-                    
-                    # Create substitution dict
-                    subs = dict(zip(group_by, group_key))
-                    subs.update(first_components)
-                    
-                    # Replace placeholders
-                    output_name = output_template
-                    for field, value in subs.items():
-                        output_name = output_name.replace(f'{{{field}}}', str(value))
-                    
-                    output_path = os.path.join(folder, output_name)
-                    
-                    # Save results
-                    self.save_averaged_data(averaged_data, output_path)
-                    
-                    print(f"  Metrics: {len(averaged_data)}")
-                    print(f"  Output: {output_name}")
-                    
-                    processed += 1
+            all_files.append(os.path.join(folder, file))
+        
+        if not all_files:
+            print(f"No files found matching criteria in {folder}")
+            return
+        
+        print(f"\nFolder: {folder}")
+        print(f"Files found: {len(all_files)}")
+        
+        # Process each group independently
+        processed = 0
+        skipped = 0
+        
+        for avg_config in self.config.get('average_groups', []):
+            group_name = avg_config['name']
+            group_by = avg_config['group_by']
+            min_files = avg_config.get('min_files', 2)
             
-            # Update totals for this report type
-            total_processed += processed
-            total_skipped += skipped
-            print(f"\n--- {report_type}: {processed} groups processed, {skipped} skipped ---")
+            print(f"\n{'='*70}")
+            print(f"PROCESSING: {group_name}")
+            print(f"Grouping by: {', '.join(group_by)}")
+            print(f"Minimum files: {min_files}")
+            print(f"{'='*70}")
+            
+            # Group files for this specific grouping strategy
+            current_groups = self.group_files(all_files, group_by)
+            
+            # Process groups for this strategy
+            for group_key, file_list in sorted(current_groups.items()):
+                group_dict = dict(zip(group_by, group_key))
+                
+                # Count unique files
+                unique_files = set(filepath for filepath, _ in file_list)
+                num_files = len(unique_files)
+                
+                if num_files < min_files:
+                    print(f"⊗ SKIP {group_dict} ({num_files} files < {min_files} minimum)")
+                    skipped += 1
+                    continue
+                
+                print(f"\n✓ PROCESS {group_dict}")
+                print(f"  Files: {num_files}")
+                
+                # Average the data
+                averaged_data = self.average_group(file_list)
+                
+                if not averaged_data:
+                    print(f"  Warning: No data to average")
+                    continue
+                
+                # Generate output filename using this strategy's template
+                _, first_components = file_list[0]
+                output_template = avg_config['output_template']
+                
+                # Create substitution dict
+                subs = dict(zip(group_by, group_key))
+                subs.update(first_components)
+                
+                # Replace placeholders
+                output_name = output_template
+                for field, value in subs.items():
+                    output_name = output_name.replace(f'{{{field}}}', str(value))
+                
+                output_path = os.path.join(folder, output_name)
+                
+                # Save results
+                self.save_averaged_data(averaged_data, output_path)
+                
+                print(f"  Metrics: {len(averaged_data)}")
+                print(f"  Output: {output_name}")
+                
+                processed += 1
         
         # Calculate elapsed time
         elapsed_time = time.time() - start_time
@@ -454,28 +393,22 @@ class ReportAverager:
         print("\n" + "="*70)
         print("SUMMARY")
         print("="*70)
-        print(f"Report types processed: {len([rt for rt in report_types if rt])}")
-        print(f"Total groups processed: {total_processed}")
-        print(f"Total groups skipped: {total_skipped}")
-        print(f"Output files created: {total_processed}")
+        print(f"Groups processed: {processed}")
+        print(f"Groups skipped: {skipped}")
+        print(f"Output files created: {processed}")
         print(f"Total time: {elapsed_time:.2f}s")
-        print(f"Avg per group: {elapsed_time/max(total_processed, 1):.2f}s")
+        print(f"Avg per group: {elapsed_time/max(processed, 1):.2f}s")
         print("="*70)
 
 def main():
-    # Auto-resolve config path if not provided
-    if len(sys.argv) >= 2:
-        config_path = Path(sys.argv[1])
-    else:
-        config_path = CONFIG_DIR / 'averager_config.json'
-    
-    if not config_path.exists():
-        print(f"ERROR: Config file not found: {config_path}")
+    if len(sys.argv) < 2:
+        print("Usage: python batch_avg.py <config_file>")
+        print("\nExample: python batch_avg.py config.json")
         sys.exit(1)
     
-    averager = ReportAverager(str(config_path))
+    config_path = sys.argv[1]
+    averager = ReportAverager(config_path)
     averager.run()
-
 
 if __name__ == "__main__":
     main()

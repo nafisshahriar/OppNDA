@@ -28,9 +28,8 @@
     "raw_files": {
       "positions": {
         "buffer": 4,
-        "distro": 5,
         "prefix": 0,
-        "report_type": 6,
+        "report_type": 5,
         "router": 1,
         "seed": 2,
         "ttl": 3
@@ -46,7 +45,13 @@
   },
   "metrics": {
     "ignore": [],
-    "include": []
+    "include": [
+      "delivery_prob",
+      "overhead_ratio",
+      "latency_avg",
+      "hopcount_avg",
+      "buffertime_avg"
+    ]
   },
   "plot_settings": {
     "3d_surface": {
@@ -140,6 +145,9 @@
         "quartile_line_width": 8.5,
         "width": 0.9
       }
+    },
+    "general": {
+      "dpi": 300
     }
   },
   "plot_thresholds": {
@@ -150,5 +158,6 @@
   "report_extension": ".txt",
   "report_types": [
     "MessageStatsReport"
-  ]
+  ],
+  "test_field": "test_value"
 }

@@ -1,0 +1,568 @@
+/* Modern OppNDA UI Enhancement - Sleek and Professional Design */
+
+/* ================================================================
+   MODERN FORM ELEMENTS & COMPONENTS
+   ================================================================ */
+
+/* Improved form inputs with modern styling */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="file"],
+select,
+textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background: white;
+    color: #1e293b;
+    font-family: inherit;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="file"]:focus,
+select:focus,
+textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+input[type="text"]:hover,
+input[type="number"]:hover,
+select:hover {
+    border-color: #cbd5e1;
+}
+
+/* Modern buttons */
+button,
+.button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+button:hover,
+.button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* Primary buttons */
+.full-width-button,
+.edit-button {
+    width: 100%;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    justify-content: center;
+}
+
+.full-width-button:hover,
+.edit-button:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+/* Add buttons */
+.add-button {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.add-button:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+/* Remove/Delete buttons */
+.remove-button {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    width: auto;
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.remove-button:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+/* ================================================================
+   TABLE STYLING
+   ================================================================ */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+table thead {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 2px solid #e2e8f0;
+}
+
+table th {
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #334155;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+}
+
+table tbody tr:hover {
+    background: #f8fafc;
+}
+
+table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Dynamic table styling */
+.dynamic-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dynamic-table input,
+.dynamic-table select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+}
+
+/* ================================================================
+   FIELDSET & LEGEND MODERNIZATION
+   ================================================================ */
+
+fieldset {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+fieldset:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 1px 3px rgba(59, 130, 246, 0.1);
+}
+
+legend {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ================================================================
+   FORM GROUPS & LABELS
+   ================================================================ */
+
+.form-group {
+    margin-bottom: 18px;
+    width: 100%;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    width: 100%;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #334155;
+    cursor: pointer;
+}
+
+label i {
+    margin-right: 6px;
+    color: #3b82f6;
+}
+
+.form-hint {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ================================================================
+   CHECKBOXES & RADIO BUTTONS
+   ================================================================ */
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+}
+
+.checkbox-container input[type="checkbox"],
+.checkbox-container input[type="radio"] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #3b82f6;
+}
+
+/* ================================================================
+   ADVANCED SETTINGS / DETAILS
+   ================================================================ */
+
+.advanced-settings {
+    margin-top: 20px;
+    padding: 16px;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.advanced-settings summary {
+    font-weight: 600;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    user-select: none;
+}
+
+.advanced-settings summary:hover {
+    color: #1e293b;
+}
+
+.advanced-settings[open] summary {
+    margin-bottom: 16px;
+}
+
+.advanced-content {
+    padding-left: 12px;
+    border-left: 2px solid #cbd5e1;
+}
+
+/* ================================================================
+   ALERTS & STATUS MESSAGES
+   ================================================================ */
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.alert-success {
+    background: #ecfdf5;
+    color: #065f46;
+    border-left: 4px solid #10b981;
+}
+
+.alert-warning {
+    background: #fffbeb;
+    color: #92400e;
+    border-left: 4px solid #f59e0b;
+}
+
+.alert-danger,
+.alert-error {
+    background: #fef2f2;
+    color: #991b1b;
+    border-left: 4px solid #ef4444;
+}
+
+.alert-info {
+    background: #eff6ff;
+    color: #0c2340;
+    border-left: 4px solid #3b82f6;
+}
+
+/* ================================================================
+   BATCH PREVIEW COMPONENT
+   ================================================================ */
+
+.batch-preview {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+    border: 2px solid #3b82f6;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.batch-preview-icon {
+    font-size: 32px;
+    color: #3b82f6;
+}
+
+.batch-preview-text h4 {
+    margin: 0 0 4px;
+    color: #1e293b;
+}
+
+.batch-preview-text span {
+    display: block;
+    font-size: 18px;
+    font-weight: 700;
+    color: #3b82f6;
+    margin-bottom: 4px;
+}
+
+.batch-preview-text small {
+    color: #64748b;
+    font-size: 12px;
+}
+
+/* ================================================================
+   PROGRESS BAR
+   ================================================================ */
+
+.progress-container {
+    width: 100%;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+
+.progress-text {
+    font-size: 12px;
+    color: #64748b;
+    margin: 0;
+}
+
+/* ================================================================
+   TABS & TAB CONTENT
+   ================================================================ */
+
+.tabcontent {
+    display: none;
+    padding: 24px;
+    animation: fadeIn 0.2s ease;
+    margin-left: 19vw;
+    min-height: calc(100vh - 40px);
+    background: linear-gradient(to bottom right, #f9fafc, #eef2f7);
+}
+
+.tabcontent.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tabcontent h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tabcontent h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #334155;
+    margin-top: 24px;
+    margin-bottom: 12px;
+}
+
+.tabcontent h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+    margin-top: 16px;
+    margin-bottom: 8px;
+}
+
+/* ================================================================
+   PATTERN BUILDER COMPONENTS
+   ================================================================ */
+
+.pattern-component {
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    cursor: grab;
+    transition: all 0.2s ease;
+    user-select: none;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.pattern-component:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.pattern-component:active {
+    cursor: grabbing;
+}
+
+/* ================================================================
+   RESPONSIVE DESIGN
+   ================================================================ */
+
+@media (max-width: 1024px) {
+    #tabs {
+        width: 25vw;
+    }
+
+    .tabcontent {
+        margin-left: 25vw;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    #tabs {
+        width: 100%;
+        height: auto;
+        border-bottom: 1px solid #cbd5e1;
+        padding: 10px 0;
+    }
+
+    #tabs.hidden {
+        transform: translateY(-100%);
+    }
+
+    .tabcontent {
+        margin-left: 0;
+        padding: 16px;
+    }
+
+    .batch-preview {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    table {
+        font-size: 12px;
+    }
+
+    table th,
+    table td {
+        padding: 8px;
+    }
+}
+
+/* ================================================================
+   SCROLLBAR STYLING
+   ================================================================ */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f8fafc;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* ================================================================
+   ANIMATIONS & TRANSITIONS
+   ================================================================ */
+
+* {
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInScale {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

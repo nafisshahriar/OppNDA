@@ -1456,17 +1456,22 @@ function collectBatchConfig() {
         const nameInput = row.querySelector('input[data-field="name"]');
         const groupByInput = row.querySelector('input[data-field="groupBy"]');
         const minFilesInput = row.querySelector('input[data-field="minFiles"]');
-        const outputTemplateInput = row.querySelector('input[data-field="outputTemplate"]');
 
         if (nameInput && groupByInput && nameInput.value.trim()) {
-            const groupByStr = groupByInput.value.trim();
-            const groupByArray = groupByStr ? groupByStr.split(',').map(s => s.trim()).filter(s => s) : [];
+            // Get Tagify values if available
+            let groupByArray = [];
+            if (groupByInput.tagify && groupByInput.tagify.value) {
+                groupByArray = groupByInput.tagify.value.map(tag => tag.value);
+            } else {
+                // Fallback: parse comma-separated values
+                const groupByStr = groupByInput.value.trim();
+                groupByArray = groupByStr ? groupByStr.split(',').map(s => s.trim()).filter(s => s) : [];
+            }
 
             averageGroups.push({
                 name: nameInput.value.trim(),
                 group_by: groupByArray,
-                min_files: parseInt(minFilesInput?.value) || 2,
-                output_template: outputTemplateInput?.value || ''
+                min_files: parseInt(minFilesInput?.value) || 2
             });
         }
     });
@@ -1477,7 +1482,7 @@ function collectBatchConfig() {
             extension: document.getElementById('batchExtension')?.value || '.txt'
         },
         filename_pattern: {
-            delimiter: document.getElementById('batchDelimiter')?.value || '_',
+            delimiter: window.patternBuilder?.delimiter || '_',
             components: components
         },
         data_separator: document.getElementById('batchDataSeparator')?.value || ':',
@@ -2492,17 +2497,19 @@ function addBatchComponent(name = '', position = 0) {
 }
 
 // Add an average group row to the batch average groups table
-function addBatchAverageGroup(name = '', groupBy = '', minFiles = 2, outputTemplate = '') {
+function addBatchAverageGroup(name = '', groupBy = '', minFiles = 2) {
     const tbody = document.getElementById('batchAverageGroupsBody');
     if (!tbody) return;
 
     const groupByStr = Array.isArray(groupBy) ? groupBy.join(', ') : groupBy;
+
     const row = document.createElement('tr');
+    const uniqueId = 'groupByTagify_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
     row.innerHTML = `
         <td><input type="text" data-field="name" value="${name}" placeholder="e.g., ttl_group"></td>
-        <td><input type="text" data-field="groupBy" value="${groupByStr}" placeholder="e.g., report_type, router, ttl"></td>
+        <td><input type="text" id="${uniqueId}" data-field="groupBy" value="${groupByStr}" placeholder="Select pattern names..." style="width: 100%;"></td>
         <td><input type="number" data-field="minFiles" value="${minFiles}" min="1" style="width: 60px;"></td>
-        <td><input type="text" data-field="outputTemplate" value="${outputTemplate}" placeholder="e.g., {report_type}_{router}_{ttl}_{grouping_type}_average.txt"></td>
         <td>
             <button type="button" class="remove-button" onclick="removeDynamicRow(this)" style="padding: 4px 8px;">
                 <i class="fas fa-trash"></i>
@@ -2510,6 +2517,37 @@ function addBatchAverageGroup(name = '', groupBy = '', minFiles = 2, outputTempl
         </td>
     `;
     tbody.appendChild(row);
+
+    // Initialize Tagify for this row's group by field
+    const tagifyInput = document.getElementById(uniqueId);
+    if (tagifyInput) {
+        setTimeout(() => {
+            initializeGroupByTagify(tagifyInput);
+        }, 0);
+    }
+}
+
+function initializeGroupByTagify(inputElement) {
+    // Get pattern names from Pattern Builder
+    let patternNames = [];
+    if (typeof patternBuilder !== 'undefined' && patternBuilder.getPatternData) {
+        const patternData = patternBuilder.getPatternData();
+        patternNames = patternData.names || [];
+    }
+
+    // Initialize Tagify if not already initialized
+    if (!inputElement.tagify) {
+        new Tagify(inputElement, {
+            whitelist: patternNames,
+            enforceWhitelist: true,
+            dropdown: {
+                maxItems: 20,
+                enabled: patternNames.length > 0 ? 1 : 0,
+                closeOnSelect: false
+            },
+            placeholder: 'Select pattern names from builder...'
+        });
+    }
 }
 
 // Add a grouping label row to the analysis grouping labels table
@@ -2876,14 +2914,13 @@ function loadBatchConfig() {
                         addBatchAverageGroup(
                             group.name || '',
                             group.group_by || [],
-                            group.min_files || 2,
-                            group.output_template || ''
+                            group.min_files || 2
                         );
                     });
                 } else {
                     // Add default average groups if none defined
-                    addBatchAverageGroup('ttl_average', ['router', 'ttl'], 2, '{report_type}_{router}_{ttl}_ttl_average.txt');
-                    addBatchAverageGroup('buffer_average', ['router', 'buffer'], 2, '{report_type}_{router}_{buffer}_buffer_average.txt');
+                    addBatchAverageGroup('ttl_average', ['router', 'ttl'], 2);
+                    addBatchAverageGroup('buffer_average', ['router', 'buffer'], 2);
                 }
             }
 
@@ -3405,8 +3442,7 @@ function applyFilenamePreset(presetName) {
             addBatchAverageGroup(
                 group.name,
                 group.groupBy,
-                group.minFiles,
-                group.outputTemplate
+                group.minFiles
             );
         });
     }

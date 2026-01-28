@@ -6,20 +6,35 @@ Handles configuration file management and script execution.
 import os
 import sys
 import json
+import copy
 import platform
 import subprocess
 from datetime import datetime
 from pathlib import Path
+from typing import Dict, Optional, Tuple, Any
 from flask import Blueprint, jsonify, request, current_app
+
+# Import path utilities
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from core.path_utils import resolve_absolute_path, validate_path
 
 api_bp = Blueprint('api', __name__)
 
-# Configuration file mapping
+# ============================================================================
+# CONSTANTS
+# ============================================================================
 CONFIG_FILES = {
     'analysis': 'analysis_config.json',
     'averager': 'averager_config.json',
     'regression': 'regression_config.json'
 }
+
+DEFAULT_SCENARIO_NAME = 'default_scenario'
+DEFAULT_UPDATE_INTERVAL = 0.1  # seconds
+DEFAULT_END_TIME = 43200  # 12 hours in seconds
+DEFAULT_BATCH_COUNT = 0
+DEFAULT_SETTINGS_FILE = 'default_settings.txt'
+DEFAULT_COMPILE_FIRST = False
 
 # ============================================================================
 # DEFAULT SETTINGS - Enable new users to run simulations immediately
@@ -71,22 +86,21 @@ DEFAULT_ONE_SETTINGS = {
 }
 
 
-def generate_default_settings(overrides=None):
+def generate_default_settings(overrides: Optional[Dict[str, Any]] = None) -> str:
     """Generate a complete ONE simulator settings file content with sensible defaults.
     
     Args:
-        overrides: dict of values to override defaults (e.g., {'scenario_name': 'my_sim'})
+        overrides: Dict of values to override defaults (e.g., {'scenario_name': 'my_sim'})
     
     Returns:
-        str: Complete ONE settings file content ready to save
+        Complete ONE settings file content ready to save
     """
     config = DEFAULT_ONE_SETTINGS.copy()
     if overrides:
         config.update(overrides)
     
     # Generate timestamp for unique scenario names
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    scenario_name = config.get('scenario_name', 'default_scenario')
+    scenario_name = config.get('scenario_name', DEFAULT_SCENARIO_NAME)
     
     content = f"""#
 # OppNDA Default Simulation Settings
@@ -172,8 +186,15 @@ GUI.EventLogPanel.nrofEvents = 100
     return content
 
 
-def get_config_path(config_name):
-    """Get the cross-platform path to a config file."""
+def get_config_path(config_name: str) -> Path:
+    """Get the cross-platform path to a config file.
+    
+    Args:
+        config_name: Name of the configuration
+        
+    Returns:
+        Path object pointing to the configuration file
+    """
     config_dir = current_app.config['CONFIG_DIR']
     return config_dir / CONFIG_FILES.get(config_name, '')
 
@@ -183,10 +204,13 @@ def get_config_path(config_name):
 # ============================================================================
 
 @api_bp.route('/default-settings', methods=['GET'])
-def get_default_settings():
+def get_default_settings() -> Tuple[Dict[str, Any], int]:
     """Return the default ONE simulator settings as JSON.
     
     New users can use this to understand what defaults will be used.
+    
+    Returns:
+        JSON response with defaults and message
     """
     return jsonify({
         'defaults': DEFAULT_ONE_SETTINGS,
@@ -195,7 +219,7 @@ def get_default_settings():
 
 
 @api_bp.route('/default-settings/generate', methods=['POST'])
-def generate_default_settings_endpoint():
+def generate_default_settings_endpoint() -> Tuple[Dict[str, Any], int]:
     """Generate a default ONE settings file with optional overrides.
     
     Request body:
@@ -212,7 +236,7 @@ def generate_default_settings_endpoint():
         data = request.get_json() or {}
         overrides = data.get('overrides', {})
         should_save = data.get('save', False)
-        filename = data.get('filename', 'default_settings.txt')
+        filename = data.get('filename', DEFAULT_SETTINGS_FILE)
         
         # Generate settings content
         content = generate_default_settings(overrides)
@@ -879,13 +903,19 @@ def run_regression_only():
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
 
 
-def deep_merge(base: dict, updates: dict) -> dict:
+def deep_merge(base: Dict[str, Any], updates: Dict[str, Any]) -> Dict[str, Any]:
     """Deep merge updates into base dict, preserving non-updated nested fields.
     
     This ensures fields not exposed in the UI (like plot_settings) are preserved
     when saving config changes from the GUI.
+    
+    Args:
+        base: Base configuration dictionary
+        updates: Updates to apply to base
+        
+    Returns:
+        Merged configuration dictionary
     """
-    import copy
     result = copy.deepcopy(base)  # Deep copy to preserve all nested structures
     
     for key, value in updates.items():
@@ -897,4 +927,254 @@ def deep_merge(base: dict, updates: dict) -> dict:
             result[key] = value
     
     return result
+
+
+# ============================================================================
+# DIRECTORY BROWSING & PATH UTILITIES
+# ============================================================================
+
+@api_bp.route('/browse-directory', methods=['POST'])
+def browse_directory():
+    """Browse and list directories for modern UI path selection.
+    
+    Request JSON:
+        - path: (optional) Directory to browse. If empty, returns home/project dirs
+        - filter_type: (optional) 'dirs', 'files', or 'all'
+    
+    Returns:
+        {
+            'success': bool,
+            'current_path': str (absolute path),
+            'directories': [{'name': str, 'path': str}, ...],
+            'files': [{'name': str, 'path': str, 'size': int}, ...],
+            'parent_path': str or null
+        }
+    """
+    try:
+        data = request.get_json() or {}
+        browse_path = data.get('path', '')
+        filter_type = data.get('filter_type', 'dirs')  # 'dirs', 'files', or 'all'
+        
+        # Resolve path - handle relative and absolute
+        if not browse_path or browse_path == '.':
+            # Return home/project directories
+            if platform.system() == 'Windows':
+                root_dirs = [
+                    os.path.expanduser('~'),  # Home
+                    'C:\\',  # C: drive
+                ]
+            else:
+                root_dirs = [
+                    os.path.expanduser('~'),  # Home
+                    '/home',
+                    '/tmp',
+                ]
+            current_path = os.path.expanduser('~')
+        else:
+            # Resolve absolute path
+            current_path = os.path.abspath(os.path.expanduser(browse_path))
+        
+        # Security: Ensure path exists and is accessible
+        if not os.path.exists(current_path):
+            return jsonify({
+                'success': False,
+                'error': f'Path does not exist: {current_path}'
+            }), 400
+        
+        if not os.path.isdir(current_path):
+            return jsonify({
+                'success': False,
+                'error': f'Path is not a directory: {current_path}'
+            }), 400
+        
+        # List directories and files
+        directories = []
+        files = []
+        
+        try:
+            for item in sorted(os.listdir(current_path)):
+                item_path = os.path.join(current_path, item)
+                
+                # Skip hidden files/dirs
+                if item.startswith('.'):
+                    continue
+                
+                try:
+                    if os.path.isdir(item_path):
+                        if filter_type in ['dirs', 'all']:
+                            directories.append({
+                                'name': item,
+                                'path': item_path
+                            })
+                    else:
+                        if filter_type in ['files', 'all']:
+                            try:
+                                size = os.path.getsize(item_path)
+                            except (OSError, PermissionError):
+                                # Cannot get file size, use 0
+                                size = 0
+                            files.append({
+                                'name': item,
+                                'path': item_path,
+                                'size': size
+                            })
+                except (PermissionError, OSError):
+                    # Skip inaccessible items
+                    pass
+        except PermissionError:
+            return jsonify({
+                'success': False,
+                'error': f'Permission denied accessing: {current_path}'
+            }), 403
+        
+        # Get parent path
+        parent_path = os.path.dirname(current_path)
+        if parent_path == current_path:
+            parent_path = None  # Root directory
+        
+        return jsonify({
+            'success': True,
+            'current_path': current_path,
+            'directories': directories,
+            'files': files,
+            'parent_path': parent_path
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@api_bp.route('/resolve-path', methods=['POST'])
+def resolve_path():
+    """Resolve a relative or absolute path to its absolute form.
+    
+    Request JSON:
+        - path: (required) Path to resolve (can be relative or absolute)
+    
+    Returns:
+        {
+            'success': bool,
+            'absolute_path': str,
+            'exists': bool,
+            'is_dir': bool,
+            'is_file': bool
+        }
+    """
+    try:
+        data = request.get_json() or {}
+        path = data.get('path', '').strip()
+        
+        if not path:
+            return jsonify({
+                'success': False,
+                'error': 'Path is required'
+            }), 400
+        
+        # Expand user home (~) and resolve to absolute
+        absolute_path = os.path.abspath(os.path.expanduser(path))
+        
+        return jsonify({
+            'success': True,
+            'absolute_path': absolute_path,
+            'exists': os.path.exists(absolute_path),
+            'is_dir': os.path.isdir(absolute_path),
+            'is_file': os.path.isfile(absolute_path)
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@api_bp.route('/save-config', methods=['POST'])
+def auto_save_config():
+    """Auto-save configuration changes (silent endpoint for auto-save manager).
+    
+    This endpoint handles incremental config saves from the UI without
+    user notifications. It merges changes with existing config to preserve
+    non-UI fields.
+    
+    Request JSON:
+        - config: Config name ('analysis', 'averager', or 'regression')
+        - changes: Dict of field name -> value pairs
+    
+    Returns:
+        { 'success': bool, 'message': str }
+    """
+    try:
+        data = request.get_json() or {}
+        config_name = data.get('config', '').strip()
+        changes = data.get('changes', {})
+        
+        if not config_name:
+            return jsonify({
+                'success': False,
+                'error': 'Config name is required'
+            }), 400
+        
+        if config_name not in ['analysis', 'averager', 'regression']:
+            return jsonify({
+                'success': False,
+                'error': f'Invalid config: {config_name}'
+            }), 400
+        
+        if not isinstance(changes, dict):
+            return jsonify({
+                'success': False,
+                'error': 'Changes must be a dictionary'
+            }), 400
+        
+        config_dir = current_app.config.get('CONFIG_DIR')
+        if not config_dir:
+            return jsonify({
+                'success': False,
+                'error': 'Configuration directory not set'
+            }), 500
+        
+        config_file = CONFIG_FILES.get(config_name)
+        if not config_file:
+            return jsonify({
+                'success': False,
+                'error': f'Unknown config file for {config_name}'
+            }), 400
+        
+        config_path = os.path.join(config_dir, config_file)
+        
+        # Load existing config
+        existing_config = {}
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, 'r') as f:
+                    existing_config = json.load(f)
+            except json.JSONDecodeError:
+                existing_config = {}
+        
+        # Merge changes with existing config
+        updated_config = deep_merge(existing_config, changes)
+        
+        # Write updated config back
+        try:
+            with open(config_path, 'w') as f:
+                json.dump(updated_config, f, indent=2)
+        except IOError as e:
+            return jsonify({
+                'success': False,
+                'error': f'Failed to write config file: {str(e)}'
+            }), 500
+        
+        return jsonify({
+            'success': True,
+            'message': f'{config_name} config auto-saved'
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 

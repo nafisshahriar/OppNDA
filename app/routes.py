@@ -9,20 +9,29 @@ import json
 import platform
 import subprocess
 from pathlib import Path
+from typing import Dict, Any, Tuple
 from flask import Blueprint, render_template, send_from_directory, current_app, request, jsonify
 
 main_bp = Blueprint('main', __name__)
 
 
 @main_bp.route('/')
-def index():
-    """Serve the main settings page."""
+def index() -> str:
+    """Serve the main settings page.
+    
+    Returns:
+        Rendered settings.html template
+    """
     return render_template('settings.html')
 
 
 @main_bp.route('/nda')
-def nda():
-    """Serve the analysis results page with plot gallery."""
+def nda() -> Tuple[str, int]:
+    """Serve the analysis results page with plot gallery.
+    
+    Returns:
+        Rendered nda.html template with plot files
+    """
     plots_dir = current_app.config['PLOTS_DIR']
     
     plot_files = []

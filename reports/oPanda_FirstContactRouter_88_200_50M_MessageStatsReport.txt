@@ -1,0 +1,20 @@
+Message stats for scenario oPanda_FirstContactRouter_88_200_50M
+sim_time: 4500.1000
+created: 151
+started: 5645
+relayed: 4306
+aborted: 1328
+dropped: 216
+removed: 0
+delivered: 44
+delivery_prob: 0.2914
+response_prob: 0.0000
+overhead_ratio: 96.8636
+latency_avg: 1747.8773
+latency_med: 1738.4000
+hopcount_avg: 3.7500
+hopcount_med: 4
+buffertime_avg: 3014.8190
+buffertime_med: 3126.2000
+rtt_avg: NaN
+rtt_med: NaN

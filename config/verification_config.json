@@ -1,0 +1,31 @@
+{
+    "folder": "./reports",
+    "file_filter": {
+        "extension": ".txt",
+        "contains": ""
+    },
+    "filename_mode": "auto",
+    "filename_pattern": {
+        "delimiter": "_",
+        "components": {
+            "scenario_name": 0,
+            "router": 1,
+            "seed": 2,
+            "ttl": 3,
+            "buffer": 4,
+            "report_type": 5
+        },
+        "extract": {
+            "ttl": "(\\d+)",
+            "seed": "(\\d+)"
+        }
+    },
+    "data_separator": ":",
+    "ignore_fields": [],
+    "report_types": [],
+    "average_groups": [],
+    "output": {
+        "filename_template": "average.txt",
+        "precision": 4
+    }
+}
