@@ -1,6 +1,0 @@
-time: 100
-delivery_prob: 0.85
-latency_avg: 15.5
-overhead_ratio: 2.1
-hops_avg: 3.4
-buffer_time_avg: 45.2

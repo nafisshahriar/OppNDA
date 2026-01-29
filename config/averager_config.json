@@ -1,5 +1,5 @@
 {
-  "folder": "reports/",
+  "folder": "reports",
   "file_filter": {
     "extension": ".txt",
     "contains": ""

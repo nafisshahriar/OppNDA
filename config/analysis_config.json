@@ -2,7 +2,7 @@
   "data_separator": ":",
   "directories": {
     "plots_dir": "plots",
-    "report_dir": "reports/"
+    "report_dir": "reports"
   },
   "enabled_plots": {
     "3d_surface": true,
