@@ -75,6 +75,9 @@
         "elev": 30
       }
     },
+    "general": {
+      "dpi": 300
+    },
     "heatmaps": {
       "font_sizes": {
         "annotations": 30,
@@ -145,9 +148,6 @@
         "quartile_line_width": 8.5,
         "width": 0.9
       }
-    },
-    "general": {
-      "dpi": 300
     }
   },
   "plot_thresholds": {

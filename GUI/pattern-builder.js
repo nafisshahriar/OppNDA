@@ -6,7 +6,7 @@
 
 class PatternBuilder {
     constructor() {
-        this.patternNames = ['scenario', 'router', 'seed', 'ttl', 'buffer'];  // Default starting pattern
+        this.patternNames = ['scenario', 'router', 'seed', 'ttl', 'buffer', 'reports'];  // Default starting pattern
         this.delimiter = '_';
         this.draggedIndex = null;
         this.init();
@@ -81,7 +81,7 @@ class PatternBuilder {
         // Add button
         const addBtn = document.getElementById('patternAddBtn');
         const nameInput = document.getElementById('patternNameInput');
-        
+
         if (addBtn && nameInput) {
             addBtn.addEventListener('click', () => this.addPattern());
             nameInput.addEventListener('keypress', (e) => {
@@ -105,7 +105,7 @@ class PatternBuilder {
         // Reset and Clear buttons
         const resetBtn = document.getElementById('patternResetBtn');
         const clearBtn = document.getElementById('patternClearBtn');
-        
+
         if (resetBtn) {
             resetBtn.addEventListener('click', () => this.resetToDefault());
         }
@@ -123,7 +123,7 @@ class PatternBuilder {
         if (!input) return;
 
         let name = input.value.trim();
-        
+
         if (!name) {
             alert('Please enter a pattern name');
             input.focus();
@@ -147,7 +147,7 @@ class PatternBuilder {
         this.patternNames.push(name);
         input.value = '';
         input.focus();
-        
+
         this.renderPatternItems();
         this.updatePreview();
         this.savePattern();
@@ -260,17 +260,17 @@ class PatternBuilder {
     handleDrop(e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         if (this.draggedIndex === null) return;
 
         const targetIndex = parseInt(e.currentTarget.dataset.index);
-        
+
         if (this.draggedIndex !== targetIndex) {
             // Reorder the array
             const [movedItem] = this.patternNames.splice(this.draggedIndex, 1);
             const insertIndex = this.draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
             this.patternNames.splice(insertIndex, 0, movedItem);
-            
+
             this.draggedIndex = null;
             this.renderPatternItems();
             this.updatePreview();
@@ -294,7 +294,7 @@ class PatternBuilder {
     }
 
     resetToDefault() {
-        this.patternNames = ['scenario', 'router', 'seed', 'ttl', 'buffer'];
+        this.patternNames = ['scenario', 'router', 'seed', 'ttl', 'buffer', 'reports'];
         this.delimiter = '_';
         document.getElementById('patternDelimiter').value = '_';
         this.renderPatternItems();
@@ -329,11 +329,11 @@ class PatternBuilder {
     savePattern() {
         // Auto-save the pattern
         const patternString = this.getPatternString();
-        
+
         if (window.markDirty) {
             window.markDirty('scenario', 'file_pattern', patternString);
         }
-        
+
         // Also store in session for later reference
         sessionStorage.setItem('filePattern', JSON.stringify({
             names: this.patternNames,
@@ -348,7 +348,7 @@ class PatternBuilder {
     updateGroupByDropdowns() {
         // Find all Group By input elements in the Average Groups table
         const groupByInputs = document.querySelectorAll('input[data-field="groupBy"]');
-        
+
         groupByInputs.forEach(input => {
             // Update Tagify whitelist when pattern changes
             if (input.tagify) {

@@ -1,5 +1,5 @@
 [project]
-name = "oppnda"
+name = "OppNDA"
 version = "1.0.0"
 description = "Opportunistic Network Data Analyzer"
 readme = "README.md"

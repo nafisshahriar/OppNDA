@@ -32,4 +32,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5001/')" || exit 1
 
 # Run the application
-CMD ["python", "scripts/run.py", "--host", "0.0.0.0", "--port", "5001"]
+CMD ["python", "OppNDA.py", "--host", "0.0.0.0", "--port", "5001"]
