@@ -44,8 +44,8 @@ Feature suggestions are welcome! Please include:
 
 1. **Fork and clone the repository**
    ```bash
-   git clone https://github.com/yourusername/oppnda.git
-   cd oppnda
+   git clone https://github.com/yourusername/OppNDA.git
+   cd OppNDA
    ```
 
 2. **Create a virtual environment**

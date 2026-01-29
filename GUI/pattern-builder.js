@@ -32,7 +32,7 @@ class PatternBuilder {
                         <input 
                             type="text" 
                             id="patternNameInput" 
-                            placeholder="e.g., scenario, router, seed, group, etc."
+                            placeholder="e.g., scenario, router, seed, TTL, etc."
                             class="pattern-input"
                             style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;"
                         />
