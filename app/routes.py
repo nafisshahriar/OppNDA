@@ -63,7 +63,7 @@ def serve_gui_static(filename):
 
 @main_bp.route('/run-one', methods=['POST'])
 def run_one_pipeline():
-    """Complete simulation pipeline: Save config → Run ONE → Post-processing.
+    """Complete simulation pipeline: Save config -> Run ONE -> Post-processing.
     
     This handles both /run-one (legacy) and works for the complete pipeline.
     """

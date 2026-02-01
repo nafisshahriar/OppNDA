@@ -746,62 +746,87 @@
 
     <div id="EventSettings" class="tabcontent">
         <h2>Event Settings</h2>
-        <div class="form-group">
-            <!-- Form for Adding New Event -->
+        <p style="color: #64748b; margin-bottom: 20px;">Configure message generation events for the simulation. Events
+            define how and when messages are created between nodes.</p>
+
+        <fieldset>
+            <legend><i class="fas fa-plus-circle"></i> Add New Event</legend>
             <form id="newEventForm">
-                <label for="eventClass"
-                    data-tooltip="Event generator class. MessageEventGenerator creates random messages between hosts.">Event
-                    Class:</label>
-                <input type="text" id="eventClass" name="eventClass" value="MessageEventGenerator" readonly>
-                <br>
-                <label for="eventIntervalMin"
-                    data-tooltip="Time between new message creation. E.g., 25-35 means one message every 25-35 seconds.">Creation
-                    Interval (seconds):</label>
-                <div class="form-row">
-                    <input type="number" id="eventIntervalMin" name="eventIntervalMin" value="25" required>
-                    <p style="padding-top: 1vh;">to</p>
-                    <input type="number" id="eventIntervalMax" name="eventIntervalMax" value="35" required>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="eventClass"
+                        data-tooltip="Event generator class. MessageEventGenerator creates random messages between hosts.">Event
+                        Class:</label>
+                    <input type="text" id="eventClass" name="eventClass" value="MessageEventGenerator" readonly
+                        style="background: #f1f5f9; max-width: 300px;">
                 </div>
-                <br>
-                <label for="eventSizeMin"
-                    data-tooltip="Message payload size range. Use k for kilobytes, M for megabytes. E.g., 500k to 1M.">Message
-                    Size: (Use k for Kb, M for MB)</label>
-                <div class="form-row">
-                    <input type="text" id="eventSizeMin" name="eventSizeMin" value="500" required>
-                    <p style="padding-top: 1vh;">to</p>
-                    <input type="text" id="eventSizeMax" name="eventSizeMax" value="1000" required>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="eventIntervalMin"
+                        data-tooltip="Time between new message creation. E.g., 25-35 means one message every 25-35 seconds.">Creation
+                        Interval (seconds):</label>
+                    <div class="range-input-group">
+                        <input type="number" id="eventIntervalMin" name="eventIntervalMin" value="25" required
+                            style="width: 100px;">
+                        <span class="range-separator">to</span>
+                        <input type="number" id="eventIntervalMax" name="eventIntervalMax" value="35" required
+                            style="width: 100px;">
+                    </div>
                 </div>
-                <br>
-                <label for="eventHostsMin"
-                    data-tooltip="Host address range for message source/destination. 0-126 means any host from 0 to 126.">Message
-                    Source/Destination Hosts:</label>
-                <div class="form-row">
-                    <input type="number" id="eventHostsMin" name="eventHostsMin" value="0" required>
-                    <p style="padding-top: 1vh;">to</p>
-                    <input type="number" id="eventHostsMax" name="eventHostsMax" value="126" required>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="eventSizeMin"
+                        data-tooltip="Message payload size range. Use k for kilobytes, M for megabytes. E.g., 500k to 1M.">Message
+                        Size:</label>
+                    <div class="range-input-group">
+                        <input type="text" id="eventSizeMin" name="eventSizeMin" value="500k" required
+                            style="width: 100px;" placeholder="e.g., 500k">
+                        <span class="range-separator">to</span>
+                        <input type="text" id="eventSizeMax" name="eventSizeMax" value="1M" required
+                            style="width: 100px;" placeholder="e.g., 1M">
+                    </div>
+                    <p class="form-hint"><i class="fas fa-info-circle"></i> Use k for KB, M for MB (e.g., 500k, 1M)</p>
                 </div>
-                <br>
-                <label for="eventPrefix"
-                    data-tooltip="Prefix for message IDs. 'M' creates M1, M2, M3... for easy identification in logs.">Message
-                    ID Prefix:</label>
-                <input type="text" id="eventPrefix" name="eventPrefix" value="M" required>
-                <br>
-                <div class="form-row">
-                    <button type="button" class="add-button"
-                        style="font-size: 1rem; padding-top: 0.8%; padding-bottom: 0.8%;">Add Event</button>
-                    <button type="button" class="remove-button"
-                        style="font-size: 1rem; padding-top: 0.8%; padding-bottom: 0.8%;">Remove All Events</button>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="eventHostsMin"
+                        data-tooltip="Host address range for message source/destination. 0-126 means any host from 0 to 126.">Source/Destination
+                        Hosts:</label>
+                    <div class="range-input-group">
+                        <input type="number" id="eventHostsMin" name="eventHostsMin" value="0" required
+                            style="width: 100px;">
+                        <span class="range-separator">to</span>
+                        <input type="number" id="eventHostsMax" name="eventHostsMax" value="126" required
+                            style="width: 100px;">
+                    </div>
+                    <p class="form-hint"><i class="fas fa-info-circle"></i> Host address range (typically 0 to total
+                        hosts - 1)</p>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="eventPrefix"
+                        data-tooltip="Prefix for message IDs. 'M' creates M1, M2, M3... for easy identification in logs.">Message
+                        ID Prefix:</label>
+                    <input type="text" id="eventPrefix" name="eventPrefix" value="M" required style="max-width: 100px;">
+                </div>
+
+                <div class="button-row" style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button type="button" class="add-button">
+                        <i class="fas fa-plus"></i> Add Event
+                    </button>
+                    <button type="button" class="remove-button">
+                        <i class="fas fa-trash"></i> Remove All Events
+                    </button>
                 </div>
             </form>
-            <br>
-        </div>
-        <!-- Event List Table -->
-        <table border="1px" id="eventList">
+        </fieldset>
+
+        <h3 style="margin-top: 25px;"><i class="fas fa-list" style="color: #10b981;"></i> Configured Events</h3>
+        <table id="eventList">
             <thead>
                 <tr>
                     <th>Event Class</th>
                     <th>Creation Interval (s)</th>
-                    <th>Message Size (kB)</th>
+                    <th>Message Size</th>
                     <th>Hosts</th>
                     <th>Prefix</th>
                     <th>Action</th>
@@ -1049,7 +1074,7 @@
 
             <div class="form-group">
                 <button type="button" class="full-width-button" onclick="runONE()" id="runButton">
-                    <i class="fas fa-play"></i> Run ONE Simulator
+                    <i class="fas fa-play"></i> Run ONE Simulator and OppNDA
                 </button>
             </div>
         </form>
@@ -1063,92 +1088,134 @@
             </p>
 
             <div class="form-row" style="gap: 10px;">
-                <button type="button" class="edit-button" onclick="runPostProcessingStep('averager')" style="flex: 1;">
+                <button type="button" class="edit-button" onclick="runStreamingStep('averager')" style="flex: 1;">
                     <i class="fas fa-calculator"></i> Run Averager
                 </button>
-                <button type="button" class="edit-button" onclick="runPostProcessingStep('analysis')" style="flex: 1;">
+                <button type="button" class="edit-button" onclick="runStreamingStep('analysis')" style="flex: 1;">
                     <i class="fas fa-chart-line"></i> Run Analysis
                 </button>
-                <button type="button" class="edit-button" onclick="runPostProcessingStep('regression')"
-                    style="flex: 1;">
+                <button type="button" class="edit-button" onclick="runStreamingStep('regression')" style="flex: 1;">
                     <i class="fas fa-brain"></i> Run Regression
                 </button>
             </div>
 
             <div style="margin-top: 15px;">
-                <button type="button" class="full-width-button" onclick="runAllPostProcessing()"
+                <button type="button" class="full-width-button" onclick="runAllStreamingSteps()"
                     style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
                     <i class="fas fa-layer-group"></i> Run All Post-Processing
                 </button>
             </div>
 
-            <!-- Post-processing output -->
-            <div id="postProcessingOutput" style="display: none; margin-top: 15px;">
-                <pre id="postProcessingLog"
-                    style="background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 8px; max-height: 200px; overflow-y: auto; font-size: 12px; white-space: pre-wrap;"></pre>
+            <!-- Post-processing output console -->
+            <div id="postProcessingOutput" style="display: none; margin-top: 20px;">
+                <div class="console-container">
+                    <div class="console-header">
+                        <div class="console-title">
+                            <i class="fas fa-terminal"></i> Console Output
+                        </div>
+                        <div class="console-actions">
+                            <button type="button" class="console-btn" onclick="clearConsole()" title="Clear">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                            <button type="button" class="console-btn" onclick="copyConsole()" title="Copy">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="postProcessingLog" class="console-body"></div>
+                </div>
             </div>
         </fieldset>
 
     </div>
 
     <div id="DataAnalysis" class="tabcontent">
-        <h2>Data Analysis & Visualization</h2>
-        <button type="button" class="edit-button" id="browseDirButton" onclick="window.location.href='/nda'">Show
-            Analysis Results</button>
-        <div class="manual-section"
-            style="max-width: 95vw; margin: 2em auto; background: #f8f9fa; border-radius: 8px; padding: 2em; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-            <h2 style="color: #2c50b1;">Visualizations:</h2>
-            </h2>
-            <h3>Types of Graphs:</h3>
-            <ul>
-                <li><strong>Correlation Heatmap</strong></li>
-                <li><strong>Line Plot</strong></li>
-                <li><strong>Bar Plot</strong></li>
-                <li><strong>Pairplot</strong></li>
-            </ul>
-            <br>
-            <h3>Graph Descriptions:</h3>
-            <ul>
-                <li>
-                    <strong>Correlation Heatmap</strong>
-                    <ul>
-                        <li>Displays the correlation between key performance indicators (KPIs) such as buffer time
-                            average, delivery probability, latency average, and overhead ratio for each router.</li>
-                        <li>Helps identify relationships and dependencies among different metrics.</li>
-                    </ul>
-                </li>
-                <li>
-                    <strong>Line Plot:</strong>
-                    <ul>
-                        <li>Compares all routers in terms of KPIs over a range of values (e.g., buffer size, TTL).</li>
-                        <li>Useful for visualizing trends and performance differences between routers.</li>
-                    </ul>
-                </li>
-                <li>
-                    <strong>Bar Plot:</strong>
-                    <ul>
-                        <li>Compares routers under constant TTL and buffer size conditions.</li>
-                        <li>Shows the performance of each router for a fixed scenario, making it easy to compare their
-                            effectiveness.</li>
-                    </ul>
-                </li>
-                <li>
-                    <strong>Pairplot:</strong>
-                    <ul>
-                        <li>Visualizes pairwise relationships between multiple KPIs.</li>
-                        <li>Helps in understanding the distribution and correlation between different metrics for each
-                            router.</li>
-                    </ul>
-                </li>
-            </ul>
-            <br>
-            <h3>Usage Tips:</h3>
-            <ul>
-                <li>Use the <strong>Correlation Heatmap</strong> to quickly spot which KPIs are strongly related.</li>
-                <li>Refer to <strong>Line Plots</strong> for performance trends across routers.</li>
-                <li>Check <strong>Bar Plots</strong> for direct comparison under specific settings.</li>
-                <li>Explore <strong>Pairplots</strong> for deeper analysis of metric relationships.</li>
-            </ul>
+        <h2><i class="fas fa-chart-bar" style="color: #3b82f6;"></i> Data Analysis & Visualization</h2>
+        <p style="color: #64748b; margin-bottom: 20px;">After running simulations and post-processing, view your
+            analysis results including performance comparisons and statistical visualizations.</p>
+
+        <button type="button" class="add-button" id="browseDirButton" onclick="window.location.href='/nda'"
+            style="margin-bottom: 25px; padding: 12px 24px; font-size: 15px;">
+            <i class="fas fa-chart-line"></i> Open Analysis Dashboard
+        </button>
+
+        <div
+            style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px;">
+            <h3 style="color: #1e293b; margin-top: 0; margin-bottom: 20px; font-size: 18px;">
+                <i class="fas fa-chart-pie" style="color: #8b5cf6; margin-right: 10px;"></i>Available Visualization
+                Types
+            </h3>
+
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                <!-- Correlation Heatmap -->
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <div
+                            style="width: 36px; height: 36px; background: linear-gradient(135deg, #ef4444, #f97316); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                            <i class="fas fa-th" style="color: white;"></i>
+                        </div>
+                        <strong style="color: #1e293b; font-size: 15px;">Correlation Heatmap</strong>
+                    </div>
+                    <p style="color: #64748b; font-size: 13px; margin: 0; line-height: 1.5;">Shows correlations between
+                        KPIs (delivery probability, latency, overhead ratio) for each router. Quickly identify which
+                        metrics are related.</p>
+                </div>
+
+                <!-- Line Plot -->
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <div
+                            style="width: 36px; height: 36px; background: linear-gradient(135deg, #3b82f6, #6366f1); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                            <i class="fas fa-chart-line" style="color: white;"></i>
+                        </div>
+                        <strong style="color: #1e293b; font-size: 15px;">Line Plot</strong>
+                    </div>
+                    <p style="color: #64748b; font-size: 13px; margin: 0; line-height: 1.5;">Compares router performance
+                        across varying parameters (buffer size, TTL). Perfect for visualizing trends and finding optimal
+                        configurations.</p>
+                </div>
+
+                <!-- Bar Plot -->
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <div
+                            style="width: 36px; height: 36px; background: linear-gradient(135deg, #10b981, #14b8a6); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                            <i class="fas fa-chart-bar" style="color: white;"></i>
+                        </div>
+                        <strong style="color: #1e293b; font-size: 15px;">Bar Plot</strong>
+                    </div>
+                    <p style="color: #64748b; font-size: 13px; margin: 0; line-height: 1.5;">Direct router comparison
+                        for fixed scenarios. Easily see which algorithm performs best under specific conditions.</p>
+                </div>
+
+                <!-- Pairplot -->
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <div
+                            style="width: 36px; height: 36px; background: linear-gradient(135deg, #f59e0b, #eab308); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                            <i class="fas fa-project-diagram" style="color: white;"></i>
+                        </div>
+                        <strong style="color: #1e293b; font-size: 15px;">Pairplot</strong>
+                    </div>
+                    <p style="color: #64748b; font-size: 13px; margin: 0; line-height: 1.5;">Matrix of scatter plots
+                        showing pairwise relationships between all KPIs. Discover hidden patterns in your data.</p>
+                </div>
+            </div>
+
+            <div
+                style="background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%); border: 1px solid #93c5fd; border-radius: 8px; padding: 16px;">
+                <h4 style="color: #1e40af; margin: 0 0 12px 0; font-size: 14px;">
+                    <i class="fas fa-lightbulb" style="margin-right: 8px;"></i>Quick Tips
+                </h4>
+                <ul style="margin: 0; padding-left: 20px; color: #475569; font-size: 13px; line-height: 1.8;">
+                    <li><strong>Heatmaps</strong> reveal which KPIs are strongly correlated (positive or negative)</li>
+                    <li><strong>Line Plots</strong> show performance trends as parameters change</li>
+                    <li><strong>Bar Plots</strong> are best for comparing final metrics across routers</li>
+                    <li><strong>Pairplots</strong> help identify outliers and non-linear relationships</li>
+                    <li>Click on any plot to zoom in, use arrow keys to navigate</li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -1291,31 +1358,113 @@
                 <details class="advanced-settings">
                     <summary><i class="fas fa-cog"></i> Advanced Settings</summary>
                     <div class="advanced-content">
-                        <!-- Pattern Components moved to Pattern Builder - hidden for consistency -->
+                        <!-- Informational Alert -->
+                        <div
+                            style="background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%); border: 1px solid #93c5fd; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
+                            <p style="margin: 0; font-size: 13px; color: #1e40af;">
+                                <i class="fas fa-info-circle" style="margin-right: 8px;"></i>
+                                <strong>Advanced Configuration:</strong> These settings control how filenames are parsed
+                                and how plot axes are labeled. Most users don't need to modify these.
+                            </p>
+                        </div>
 
-                        <!-- Plot thresholds now hidden with defaults -->
-                        <input type="hidden" id="analysisMinValuesLine" name="min_values_line" value="2">
-                        <input type="hidden" id="analysisMinValuesSurface" name="min_values_surface" value="3">
-                        <input type="hidden" id="analysisMinFilesHeatmap" name="min_files_heatmap" value="2">
+                        <!-- Plot Thresholds Section -->
+                        <h4 style="margin: 0 0 10px;"><i class="fas fa-chart-line"
+                                style="color: #8b5cf6; margin-right: 8px;"></i>Plot Thresholds</h4>
+                        <p style="color: #64748b; font-size: 13px; margin-bottom: 15px;">
+                            Minimum data points required before generating specific plot types.
+                        </p>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="analysisMinValuesLine"
+                                    data-tooltip="Minimum unique values on X-axis needed to generate line plots">Min
+                                    Values for Line Plot:</label>
+                                <input type="number" id="analysisMinValuesLine" name="min_values_line" value="2"
+                                    min="2">
+                            </div>
+                            <div class="form-group">
+                                <label for="analysisMinValuesSurface"
+                                    data-tooltip="Minimum unique values needed on each axis for surface/3D plots">Min
+                                    Values for Surface Plot:</label>
+                                <input type="number" id="analysisMinValuesSurface" name="min_values_surface" value="3"
+                                    min="2">
+                            </div>
+                            <div class="form-group">
+                                <label for="analysisMinFilesHeatmap"
+                                    data-tooltip="Minimum number of report files needed to generate correlation heatmaps">Min
+                                    Files for Heatmap:</label>
+                                <input type="number" id="analysisMinFilesHeatmap" name="min_files_heatmap" value="2"
+                                    min="2">
+                            </div>
+                        </div>
 
-                        <!-- Filename positions are now auto-detected (hidden) -->
-                        <input type="hidden" id="analysisReportTypePos" name="report_type_pos" value="0">
-                        <input type="hidden" id="analysisRouterPos" name="router_pos" value="1">
-                        <input type="hidden" id="analysisGroupingTypePos" name="grouping_type_pos" value="-1">
-                        <input type="hidden" id="analysisFilenameDelimiter" value="_">
-                        <input type="hidden" id="analysisDataSeparator" value=":">
-                        <input type="hidden" id="analysisReportExtension" value=".txt">
+                        <!-- Filename Parsing Section -->
+                        <h4 style="margin: 20px 0 10px;"><i class="fas fa-file-code"
+                                style="color: #10b981; margin-right: 8px;"></i>Filename Parsing</h4>
+                        <p style="color: #64748b; font-size: 13px; margin-bottom: 15px;">
+                            Position of components in your report filenames (0-indexed). For filename <code
+                                style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">MessageStats_EpidemicRouter_TTL300.txt</code>,
+                            Report Type is at position 0, Router at 1.
+                        </p>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="analysisReportTypePos"
+                                    data-tooltip="Position of report type in filename (e.g., MessageStats)">Report Type
+                                    Position:</label>
+                                <input type="number" id="analysisReportTypePos" name="report_type_pos" value="0"
+                                    min="-1">
+                            </div>
+                            <div class="form-group">
+                                <label for="analysisRouterPos"
+                                    data-tooltip="Position of router name in filename (e.g., EpidemicRouter)">Router
+                                    Position:</label>
+                                <input type="number" id="analysisRouterPos" name="router_pos" value="1" min="-1">
+                            </div>
+                            <div class="form-group">
+                                <label for="analysisGroupingTypePos"
+                                    data-tooltip="Position of grouping type in filename (set to -1 if not present)">Grouping
+                                    Type Position:</label>
+                                <input type="number" id="analysisGroupingTypePos" name="grouping_type_pos" value="-1"
+                                    min="-1">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="analysisFilenameDelimiter"
+                                    data-tooltip="Character used to separate components in filenames (usually underscore)">Filename
+                                    Delimiter:</label>
+                                <input type="text" id="analysisFilenameDelimiter" value="_" maxlength="3"
+                                    style="max-width: 100px;">
+                            </div>
+                            <div class="form-group">
+                                <label for="analysisDataSeparator"
+                                    data-tooltip="Character separating keys from values inside report files">Data
+                                    Separator:</label>
+                                <input type="text" id="analysisDataSeparator" value=":" maxlength="3"
+                                    style="max-width: 100px;">
+                            </div>
+                            <div class="form-group">
+                                <label for="analysisReportExtension" data-tooltip="File extension of report files">File
+                                    Extension:</label>
+                                <input type="text" id="analysisReportExtension" value=".txt" maxlength="10"
+                                    style="max-width: 100px;">
+                            </div>
+                        </div>
                         <input type="hidden" id="analysisIgnoreMetrics" value="">
 
-                        <h4 style="margin: 20px 0 10px;">Grouping Labels</h4>
-                        <p style="color: #64748b; font-size: 13px; margin-bottom: 10px;">
-                            Display labels for plot axes
+                        <!-- Grouping Labels Section -->
+                        <h4 style="margin: 20px 0 10px;"><i class="fas fa-tags"
+                                style="color: #f59e0b; margin-right: 8px;"></i>Axis Labels</h4>
+                        <p style="color: #64748b; font-size: 13px; margin-bottom: 15px;">
+                            Map grouping types (from filenames) to human-readable labels for plot axes. For example, map
+                            "TTL" to "Message TTL (minutes)" or "buffer" to "Buffer Size (MB)".
                         </p>
                         <table class="dynamic-table" id="analysisGroupingLabelsTable">
                             <thead>
                                 <tr>
-                                    <th>Grouping Type</th>
-                                    <th>Display Label</th>
+                                    <th data-tooltip="The grouping type as it appears in your filenames">Grouping Type
+                                    </th>
+                                    <th data-tooltip="Human-readable label shown on plot axes">Display Label</th>
                                     <th style="width: 60px;">Action</th>
                                 </tr>
                             </thead>
@@ -1325,7 +1474,7 @@
                         </table>
                         <button type="button" class="add-button" style="margin-top: 10px;"
                             onclick="addAnalysisGroupingLabel()">
-                            <i class="fas fa-plus"></i> Add Grouping Label
+                            <i class="fas fa-plus"></i> Add Label Mapping
                         </button>
                     </div>
                 </details>
@@ -1434,57 +1583,100 @@
                 <details class="advanced-settings">
                     <summary><i class="fas fa-cog"></i> Advanced Settings</summary>
                     <div class="advanced-content">
-                        <h4 style="margin: 15px 0 10px;">Polynomial Features</h4>
+                        <!-- Informational Alert -->
+                        <div
+                            style="background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border: 1px solid #c4b5fd; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
+                            <p style="margin: 0; font-size: 13px; color: #6b21a8;">
+                                <i class="fas fa-flask" style="margin-right: 8px;"></i>
+                                <strong>Model Tuning:</strong> Fine-tune machine learning algorithm parameters. Default
+                                values work well for most datasets.
+                            </p>
+                        </div>
+
+                        <h4 style="margin: 15px 0 10px;"><i class="fas fa-superscript"
+                                style="color: #8b5cf6; margin-right: 8px;"></i>Polynomial Features</h4>
+                        <p style="color: #64748b; font-size: 13px; margin-bottom: 15px;">
+                            Create interaction terms between predictor variables to capture non-linear relationships.
+                        </p>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="polyDegree">Degree:</label>
+                                <label for="polyDegree"
+                                    data-tooltip="Maximum degree of polynomial features. Higher = more complex interactions but risk of overfitting">Degree:</label>
                                 <input type="number" id="polyDegree" name="poly_degree" value="2" min="1" max="5">
                             </div>
                             <div class="checkbox-container">
                                 <input type="checkbox" id="polyInteractionOnly" name="poly_interaction_only" checked>
-                                <label for="polyInteractionOnly">Interaction Only</label>
+                                <label for="polyInteractionOnly"
+                                    data-tooltip="Only include interaction terms (e.g., x1*x2) without powers (e.g., x1², x2²). Reduces feature count">Interaction
+                                    Only</label>
                             </div>
                             <div class="checkbox-container">
                                 <input type="checkbox" id="polyIncludeBias" name="poly_include_bias">
-                                <label for="polyIncludeBias">Include Bias</label>
+                                <label for="polyIncludeBias"
+                                    data-tooltip="Include a bias/intercept column of ones. Usually not needed if model has its own intercept">Include
+                                    Bias</label>
                             </div>
                         </div>
 
-                        <h4 style="margin: 15px 0 10px;">Cross Validation</h4>
+                        <h4 style="margin: 15px 0 10px;"><i class="fas fa-sync-alt"
+                                style="color: #10b981; margin-right: 8px;"></i>Cross Validation</h4>
+                        <p style="color: #64748b; font-size: 13px; margin-bottom: 15px;">
+                            Split data into K folds for more reliable model evaluation.
+                        </p>
                         <div class="form-group">
-                            <label for="regressionCVFolds">Number of Folds:</label>
-                            <input type="number" id="regressionCVFolds" name="cv_folds" value="5" min="2" max="20">
+                            <label for="regressionCVFolds"
+                                data-tooltip="Number of data splits. Higher = more reliable but slower. 5-10 is typical">Number
+                                of Folds:</label>
+                            <input type="number" id="regressionCVFolds" name="cv_folds" value="5" min="2" max="20"
+                                style="max-width: 150px;">
                         </div>
 
-                        <h4 style="margin: 15px 0 10px;">Model Parameters</h4>
+                        <h4 style="margin: 15px 0 10px;"><i class="fas fa-sliders-h"
+                                style="color: #f59e0b; margin-right: 8px;"></i>Model Parameters</h4>
+                        <p style="color: #64748b; font-size: 13px; margin-bottom: 15px;">
+                            Algorithm-specific hyperparameters for fine-tuning model performance.
+                        </p>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="knnNeighbors">KNN Neighbors:</label>
+                                <label for="knnNeighbors"
+                                    data-tooltip="Number of nearest neighbors to consider. Lower = more sensitive to noise, Higher = smoother predictions">KNN
+                                    Neighbors:</label>
                                 <input type="number" id="knnNeighbors" name="knn_neighbors" value="6" min="1">
                             </div>
                             <div class="form-group">
-                                <label for="dtMaxDepth">Decision Tree Max Depth:</label>
-                                <input type="number" id="dtMaxDepth" name="dt_max_depth" placeholder="null = unlimited">
+                                <label for="dtMaxDepth"
+                                    data-tooltip="Maximum tree depth. Lower = simpler model (less overfitting), Leave empty for unlimited">Decision
+                                    Tree Max Depth:</label>
+                                <input type="number" id="dtMaxDepth" name="dt_max_depth"
+                                    placeholder="Empty = unlimited">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="rfEstimators">Random Forest Estimators:</label>
+                                <label for="rfEstimators"
+                                    data-tooltip="Number of trees in Random Forest. More trees = better accuracy but slower training">Random
+                                    Forest Trees:</label>
                                 <input type="number" id="rfEstimators" name="rf_estimators" value="100" min="1">
                             </div>
                             <div class="form-group">
-                                <label for="gbEstimators">Gradient Boosting Estimators:</label>
+                                <label for="gbEstimators"
+                                    data-tooltip="Number of boosting stages (trees) in Gradient Boosting. More = better fit but risk of overfitting">GB
+                                    Boosting Stages:</label>
                                 <input type="number" id="gbEstimators" name="gb_estimators" value="100" min="1">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="gbLearningRate">GB Learning Rate:</label>
+                                <label for="gbLearningRate"
+                                    data-tooltip="Step size for each boosting iteration. Lower = more robust but needs more estimators">GB
+                                    Learning Rate:</label>
                                 <input type="number" id="gbLearningRate" name="gb_learning_rate" value="0.1" step="0.01"
                                     min="0.01" max="1">
                             </div>
                             <div class="form-group">
-                                <label for="gbMaxDepth">GB Max Depth:</label>
+                                <label for="gbMaxDepth"
+                                    data-tooltip="Maximum depth of individual trees in Gradient Boosting. Lower = simpler weak learners">GB
+                                    Max Depth:</label>
                                 <input type="number" id="gbMaxDepth" name="gb_max_depth" value="3" min="1">
                             </div>
                         </div>
@@ -1495,6 +1687,7 @@
     </div>
 
     <script src="/GUI/pattern-builder.js"></script>
+    <script src="/GUI/console-log.js"></script>
     <script src="/GUI/config.js"></script>
 
     <!-- WKT Form JavaScript -->

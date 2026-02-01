@@ -4,8 +4,8 @@ Resource Manager - Dynamic Memory Management for OppNDA
 Implements memory-aware worker optimization as described in the research paper.
 
 Mathematical Models Implemented:
-- Memory footprint: M(t) ≈ M_base + Σ(γ * size(r_i) + M_overhead)
-- Optimal workers: P_opt = max{p ∈ Z+ | M(t)|P=p ≤ η * M_RAM}
+- Memory footprint: M(t) = M_base + sum(gamma * size(r_i) + M_overhead)
+- Optimal workers: P_opt = max{p in Z+ | M(t)|P=p <= eta * M_RAM}
 """
 
 import os
@@ -25,13 +25,16 @@ except ImportError:
 class ResourceConfig:
     """Configuration for resource management parameters."""
     
-    # Default values - can be overridden
-    ETA = 0.90              # η: RAM utilization threshold (90%)
-    GAMMA = 3.0             # γ: DataFrame expansion factor
-    M_OVERHEAD_MB = 50      # Per-worker overhead in MB
-    MIN_WORKERS = 1         # Minimum worker count
-    MAX_WORKERS = 32        # Maximum worker count (hard cap)
-    FALLBACK_WORKERS = 8    # Used when safety is disabled or psutil unavailable
+    # Default values - optimized for maximum performance
+    ETA = 0.85              # eta: RAM utilization threshold (85% for safety margin)
+    GAMMA = 2.5             # gamma: DataFrame expansion factor (reduced for more workers)
+    M_OVERHEAD_MB = 30      # Per-worker overhead in MB (reduced for more workers)
+    MIN_WORKERS = 2         # Minimum worker count (at least 2 for parallelism)
+    MAX_WORKERS = 64        # Maximum worker count (hard cap, allows full CPU usage)
+    
+    # Use all available CPU cores when psutil unavailable
+    import os as _os
+    FALLBACK_WORKERS = max(4, (_os.cpu_count() or 4))  # Auto-detect CPU count
     
     # Safety can be disabled if needed
     SAFETY_ENABLED = True
@@ -41,7 +44,7 @@ class MemoryEstimator:
     """
     Estimates memory consumption for batch processing.
     
-    Implements: M(t) ≈ M_base + Σ(γ * size(r_i) + M_overhead)
+    Implements: M(t) = M_base + sum(gamma * size(r_i) + M_overhead)
     """
     
     def __init__(self, gamma: float = ResourceConfig.GAMMA, 
@@ -94,7 +97,7 @@ class DynamicSemaphore:
     """
     A semaphore that dynamically adjusts based on available memory.
     
-    Implements: P_opt = max{p ∈ Z+ | M(t)|P=p ≤ η * M_RAM}
+    Implements: P_opt = max{p in Z+ | M(t)|P=p <= eta * M_RAM}
     
     This prevents OS-level swap thrashing by capping concurrent workers
     when memory pressure is detected.
@@ -146,7 +149,7 @@ class DynamicSemaphore:
         memory = psutil.virtual_memory()
         available_ratio = memory.available / memory.total
         
-        # If we're using more than η of RAM, reduce permits
+        # If we're using more than eta of RAM, reduce permits
         if available_ratio < (1 - self._eta):
             # Scale down permits based on memory pressure
             pressure = (1 - self._eta - available_ratio) / (1 - self._eta)
@@ -236,7 +239,7 @@ class ResourceManager:
         """
         Calculate optimal worker count based on available resources.
         
-        Implements: P_opt = max{p ∈ Z+ | M(t)|P=p ≤ η * M_RAM}
+        Implements: P_opt = max{p in Z+ | M(t)|P=p <= eta * M_RAM}
         
         Args:
             file_paths: Optional list of file paths to process.

@@ -1,64 +1,165 @@
-/* NDA Analysis Results Styling */
+/* ============================================================================
+   NDA Analysis Results Page - Modern Styling
+   ============================================================================ */
 
 body {
-    background: linear-gradient(to bottom right, #f9fafc, #eef2f7);
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
     color: #334155;
-    font-family: 'Inter', 'Roboto', sans-serif;
+    font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
     margin: 0;
     padding: 0;
+    min-height: 100vh;
 }
 
 .nda-container {
-    max-width: 90vw;
-    margin: 40px auto;
-    padding: 24px;
-    background: #fff;
-    border-radius: 18px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px;
 }
 
-h2 {
+/* Header Section */
+.nda-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.nda-header h2 {
     font-size: 2rem;
     font-weight: 700;
     color: #0f172a;
-    margin-bottom: 32px;
-    text-align: center;
+    margin: 0 0 8px 0;
+    display: inline-flex;
+    align-items: center;
 }
 
+.nda-subtitle {
+    color: #64748b;
+    font-size: 15px;
+    margin: 0;
+}
+
+/* Plot Controls */
+.plot-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+    padding: 0 8px;
+}
+
+.plot-count {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* Plot Grid */
 .plot-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-    gap: 32px;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 24px;
 }
 
+/* Plot Cards */
 .plot-card {
-    background: #f8fafc;
+    background: #fff;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    padding: 18px 18px 12px 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    transition: all 0.25s ease;
+    cursor: pointer;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    transition: box-shadow 0.2s;
-    margin-bottom: 18px;
 }
 
 .plot-card:hover {
-    box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-4px);
 }
 
 .plot-img {
-    max-width: 100%;
-    max-height: 340px;
-    border-radius: 8px;
-    background: #fff;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    margin-bottom: 10px;
-    transition: transform 0.2s;
-    cursor: zoom-in;
+    width: 100%;
+    height: 240px;
+    object-fit: contain;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
 }
 
-/* Modal for zoom */
+.plot-label {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fff;
+}
+
+.plot-number {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: white;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.plot-filename {
+    font-size: 13px;
+    color: #475569;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+/* Empty State */
+.no-plots {
+    text-align: center;
+    padding: 80px 40px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.no-plots h3 {
+    color: #1e293b;
+    font-size: 20px;
+    margin: 0 0 8px 0;
+}
+
+.no-plots p {
+    color: #64748b;
+    margin: 0 0 24px 0;
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.back-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* ============================================================================
+   Modal Styling
+   ============================================================================ */
+
 .modal {
     display: none;
     position: fixed;
@@ -67,114 +168,230 @@ h2 {
     top: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(30,41,59,0.85);
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(4px);
     justify-content: center;
     align-items: center;
+    padding: 16px;
 }
 
 .modal-content {
-    max-width: 98vw;
-    max-height: 98vh;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-    background: #fff;
-    padding: 16px;
-    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    background: #1e293b;
+    border-radius: 16px;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    overflow: hidden;
-}
-
-.modal-content img {
-    max-width: 80vw;
-    max-height: 80vh;
-    border-radius: 8px;
-    display: block;
-    margin: 0 auto;
-    transition: transform 0.12s cubic-bezier(.4,2,.6,1), box-shadow 0.2s;
-    cursor: zoom-in;
     position: relative;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
 }
 
-.modal-content img.enlarged {
-    transform: scale(1.8);
-    cursor: grab;
-    box-shadow: 0 0 0 4px #219ba3;
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #0f172a;
+    border-bottom: 1px solid #334155;
+}
+
+.modal-title {
+    color: #f1f5f9;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.zoom-btn {
+    background: #334155;
+    border: none;
+    color: #e2e8f0;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.zoom-btn:hover {
+    background: #475569;
 }
 
 .close-modal {
-    position: absolute;
-    top: 8px;
-    right: 16px;
-    font-size: 2rem;
-    color: #334155;
-    background: none;
+    background: #334155;
     border: none;
+    color: #e2e8f0;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
     cursor: pointer;
-    z-index: 2;
-    margin: 0 8px;
+    font-size: 24px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
 }
 
+.close-modal:hover {
+    background: #ef4444;
+    color: white;
+}
+
+.modal-image-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 16px;
+    background: #1e293b;
+}
+
+.modal-content img {
+    max-width: 100%;
+    max-height: 70vh;
+    border-radius: 8px;
+    display: block;
+    transition: transform 0.15s ease;
+    cursor: zoom-in;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content img.enlarged {
+    transform: scale(2);
+    cursor: grab;
+    box-shadow: 0 0 0 3px #3b82f6;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #0f172a;
+    border-top: 1px solid #334155;
+}
+
+.modal-counter {
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.modal-filename {
+    color: #64748b;
+    font-size: 12px;
+    font-family: 'SF Mono', 'Consolas', monospace;
+    max-width: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Navigation Buttons */
 .modal-nav-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: #219ba3;
+    background: rgba(59, 130, 246, 0.9);
     color: #fff;
     border: none;
     border-radius: 50%;
-    width: 44px;
-    height: 44px;
-    font-size: 2.2rem;
+    width: 48px;
+    height: 48px;
     cursor: pointer;
     z-index: 2;
-    opacity: 0.92;
-    transition: background 0.2s, box-shadow 0.2s;
-    box-shadow: 0 2px 8px rgba(33,155,163,0.10);
-    margin: 0 18px;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .modal-nav-btn:hover {
-    background: #117f86;
-    box-shadow: 0 4px 16px rgba(33,155,163,0.18);
+    background: #3b82f6;
+    transform: translateY(-50%) scale(1.1);
 }
 
 .modal-prev {
-    left: 10px;
+    left: 24px;
 }
 
 .modal-next {
-    right: 10px;
+    right: 24px;
 }
 
 .arrow {
-    display: inline-block;
-    width: 22px;
-    height: 22px;
+    display: flex;
+    width: 24px;
+    height: 24px;
 }
 
 .arrow svg {
     width: 100%;
     height: 100%;
-    display: block;
 }
 
-@media (max-width: 600px) {
+/* ============================================================================
+   Responsive Design
+   ============================================================================ */
+
+@media (max-width: 768px) {
     .nda-container {
-        padding: 4vw;
+        padding: 16px;
     }
+
+    .nda-header h2 {
+        font-size: 1.5rem;
+    }
+
     .plot-grid {
+        grid-template-columns: 1fr;
         gap: 16px;
     }
-    .plot-card {
-        padding: 8px 4px 8px 4px;
+
+    .plot-img {
+        height: 200px;
     }
+
+    .modal-nav-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .modal-prev {
+        left: 8px;
+    }
+
+    .modal-next {
+        right: 8px;
+    }
+
     .modal-content img {
-        max-width: 98vw;
         max-height: 60vh;
+    }
+}
+
+@media (max-width: 480px) {
+    .plot-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-header,
+    .modal-footer {
+        padding: 10px 12px;
+    }
+
+    .modal-filename {
+        display: none;
     }
 }

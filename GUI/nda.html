@@ -1,201 +1,260 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analysis Results</title>
+    <title>Analysis Results - OppNDA</title>
     <link rel="stylesheet" href="/GUI/styles.css">
     <link rel="stylesheet" href="/GUI/nda.css">
     <link rel="icon" href="/GUI/images/oppnda_logo.png" type="image/png">
 </head>
+
 <body>
     <div class="nda-container">
-        <h2>Analysis Results</h2>
+        <div class="nda-header">
+            <h2><i class="fas fa-chart-bar" style="margin-right: 12px; color: #3b82f6;"></i>Analysis Results</h2>
+            <p class="nda-subtitle">Click any plot to view full size. Use arrow keys or buttons to navigate.</p>
+        </div>
+
+        {% if img_urls and img_urls|length > 0 %}
+        <div class="plot-controls">
+            <span class="plot-count">{{ img_urls|length }} plot{% if img_urls|length > 1 %}s{% endif %} generated</span>
+        </div>
+
         <div class="plot-grid">
             {% for img_url in img_urls %}
-            <div class="plot-card">
-                <img src="{{ img_url }}" class="plot-img" onclick="zoomPlot({{ loop.index0 }})">
+            <div class="plot-card" onclick="zoomPlot({{ loop.index0 }})">
+                <img src="{{ img_url }}" class="plot-img" alt="Analysis plot {{ loop.index }}">
+                <div class="plot-label">
+                    <span class="plot-number">{{ loop.index }}</span>
+                    <span class="plot-filename">{{ img_url.split('/')[-1] }}</span>
+                </div>
             </div>
             {% endfor %}
         </div>
+        {% else %}
+        <div class="no-plots">
+            <i class="fas fa-chart-line" style="font-size: 48px; color: #cbd5e1; margin-bottom: 16px;"></i>
+            <h3>No Analysis Plots Found</h3>
+            <p>Run post-processing to generate visualizations from your simulation data.</p>
+            <a href="/settings" class="back-button">
+                <i class="fas fa-arrow-left"></i> Return to Settings
+            </a>
+        </div>
+        {% endif %}
     </div>
 
+    <!-- Modal for zoomed view -->
     <div id="plotModal" class="modal" onclick="closeModal(event)">
-        <button class="modal-nav-btn modal-prev" onclick="event.stopPropagation(); prevPlot();">
+        <button class="modal-nav-btn modal-prev" onclick="event.stopPropagation(); prevPlot();" title="Previous (←)">
             <span class="arrow">
-                <svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <svg viewBox="0 0 24 24">
+                    <polyline points="15 6 9 12 15 18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
             </span>
         </button>
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeModal(event)">&times;</button>
-            <img id="modalImg" src="" onclick="toggleEnlarge(event)">
+        <div class="modal-content" onclick="event.stopPropagation();">
+            <div class="modal-header">
+                <span id="modalTitle" class="modal-title">Plot 1</span>
+                <div class="modal-actions">
+                    <button class="zoom-btn" onclick="toggleEnlarge(event)" title="Toggle Zoom (Space)">
+                        <i class="fas fa-search-plus" id="zoomIcon"></i>
+                    </button>
+                    <button class="close-modal" onclick="closeModal(event)" title="Close (Esc)">&times;</button>
+                </div>
+            </div>
+            <div class="modal-image-container">
+                <img id="modalImg" src="" alt="Zoomed plot view">
+            </div>
+            <div class="modal-footer">
+                <span id="modalCounter" class="modal-counter">1 / 1</span>
+                <span id="modalFilename" class="modal-filename"></span>
+            </div>
         </div>
-        <button class="modal-nav-btn modal-next" onclick="event.stopPropagation(); nextPlot();">
+        <button class="modal-nav-btn modal-next" onclick="event.stopPropagation(); nextPlot();" title="Next (→)">
             <span class="arrow">
-                <svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <svg viewBox="0 0 24 24">
+                    <polyline points="9 6 15 12 9 18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
             </span>
         </button>
     </div>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script>
-        const imgList = {{ img_urls | tojson }};
+        const imgList = {{ img_urls | tojson if img_urls else '[]' }};
         let currentIdx = 0;
         let enlarged = false;
-        let imgOffset = {x: 0, y: 0};
-        let isDragging = false, lastX = 0, lastY = 0, velocity = {x: 0, y: 0}, animationFrame;
+        let imgOffset = { x: 0, y: 0 };
+        let isDragging = false, lastX = 0, lastY = 0;
+
+        function getFilename(url) {
+            return url ? url.split('/').pop() : '';
+        }
+
+        function updateModalInfo() {
+            document.getElementById('modalTitle').textContent = `Plot ${currentIdx + 1}`;
+            document.getElementById('modalCounter').textContent = `${currentIdx + 1} / ${imgList.length}`;
+            document.getElementById('modalFilename').textContent = getFilename(imgList[currentIdx]);
+        }
 
         function zoomPlot(idx) {
+            if (imgList.length === 0) return;
             currentIdx = idx;
             const modal = document.getElementById('plotModal');
             const modalImg = document.getElementById('modalImg');
             modalImg.src = imgList[idx];
-            modalImg.classList.remove('enlarged');
-            modalImg.style.transform = '';
-            imgOffset = {x: 0, y: 0};
-            enlarged = false;
+            resetZoom();
+            updateModalInfo();
             modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         }
 
         function closeModal(e) {
             if (e.target.classList.contains('modal') || e.target.classList.contains('close-modal')) {
                 document.getElementById('plotModal').style.display = 'none';
                 document.getElementById('modalImg').src = '';
-                document.getElementById('modalImg').classList.remove('enlarged');
-                document.getElementById('modalImg').style.transform = '';
-                enlarged = false;
-                imgOffset = {x: 0, y: 0};
+                document.body.style.overflow = '';
+                resetZoom();
             }
         }
 
+        function resetZoom() {
+            const modalImg = document.getElementById('modalImg');
+            modalImg.classList.remove('enlarged');
+            modalImg.style.transform = '';
+            modalImg.style.cursor = 'zoom-in';
+            enlarged = false;
+            imgOffset = { x: 0, y: 0 };
+            document.getElementById('zoomIcon').className = 'fas fa-search-plus';
+        }
+
         function prevPlot() {
+            if (imgList.length === 0) return;
             currentIdx = (currentIdx - 1 + imgList.length) % imgList.length;
             const modalImg = document.getElementById('modalImg');
             modalImg.src = imgList[currentIdx];
-            modalImg.classList.remove('enlarged');
-            modalImg.style.transform = '';
-            enlarged = false;
-            imgOffset = {x: 0, y: 0};
+            resetZoom();
+            updateModalInfo();
         }
 
         function nextPlot() {
+            if (imgList.length === 0) return;
             currentIdx = (currentIdx + 1) % imgList.length;
             const modalImg = document.getElementById('modalImg');
             modalImg.src = imgList[currentIdx];
-            modalImg.classList.remove('enlarged');
-            modalImg.style.transform = '';
-            enlarged = false;
-            imgOffset = {x: 0, y: 0};
+            resetZoom();
+            updateModalInfo();
         }
 
         function toggleEnlarge(e) {
-            const img = e.target;
+            if (e) e.stopPropagation();
+            const img = document.getElementById('modalImg');
             enlarged = !enlarged;
             if (enlarged) {
                 img.classList.add('enlarged');
                 img.style.cursor = 'grab';
-                imgOffset = {x: 0, y: 0};
-                img.style.transform = 'scale(1.8)';
+                imgOffset = { x: 0, y: 0 };
+                img.style.transform = 'scale(2)';
+                document.getElementById('zoomIcon').className = 'fas fa-search-minus';
             } else {
-                img.classList.remove('enlarged');
-                img.style.cursor = 'zoom-in';
-                img.style.transform = '';
-                imgOffset = {x: 0, y: 0};
+                resetZoom();
             }
         }
 
-        // Smoother drag feature when enlarged
+        // Drag to pan when zoomed
         const modalImg = document.getElementById('modalImg');
-        modalImg.addEventListener('mousedown', function(e) {
-            if (!enlarged) return;
+
+        modalImg.addEventListener('mousedown', function (e) {
+            if (!enlarged) {
+                toggleEnlarge(e);
+                return;
+            }
             isDragging = true;
             lastX = e.clientX;
             lastY = e.clientY;
             modalImg.style.cursor = 'grabbing';
-            cancelAnimationFrame(animationFrame);
+            e.preventDefault();
         });
 
-        window.addEventListener('mousemove', function(e) {
+        window.addEventListener('mousemove', function (e) {
             if (isDragging && enlarged) {
                 let dx = e.clientX - lastX;
                 let dy = e.clientY - lastY;
                 imgOffset.x += dx;
                 imgOffset.y += dy;
-                velocity.x = dx;
-                velocity.y = dy;
-                modalImg.style.transform = `scale(1.8) translate(${imgOffset.x}px, ${imgOffset.y}px)`;
+                modalImg.style.transform = `scale(2) translate(${imgOffset.x}px, ${imgOffset.y}px)`;
                 lastX = e.clientX;
                 lastY = e.clientY;
             }
         });
 
-        window.addEventListener('mouseup', function(e) {
+        window.addEventListener('mouseup', function () {
             if (isDragging) {
                 isDragging = false;
                 if (enlarged) modalImg.style.cursor = 'grab';
-                // Inertia effect
-                function inertia() {
-                    velocity.x *= 0.92;
-                    velocity.y *= 0.92;
-                    imgOffset.x += velocity.x;
-                    imgOffset.y += velocity.y;
-                    modalImg.style.transform = `scale(1.8) translate(${imgOffset.x}px, ${imgOffset.y}px)`;
-                    if (Math.abs(velocity.x) > 0.5 || Math.abs(velocity.y) > 0.5) {
-                        animationFrame = requestAnimationFrame(inertia);
-                    }
-                }
-                inertia();
             }
         });
 
-        // Touch support for mobile
-        modalImg.addEventListener('touchstart', function(e) {
+        // Touch support
+        modalImg.addEventListener('touchstart', function (e) {
             if (!enlarged) return;
             isDragging = true;
             lastX = e.touches[0].clientX;
             lastY = e.touches[0].clientY;
-            cancelAnimationFrame(animationFrame);
         });
 
-        window.addEventListener('touchmove', function(e) {
+        window.addEventListener('touchmove', function (e) {
             if (isDragging && enlarged && e.touches.length === 1) {
                 let dx = e.touches[0].clientX - lastX;
                 let dy = e.touches[0].clientY - lastY;
                 imgOffset.x += dx;
                 imgOffset.y += dy;
-                velocity.x = dx;
-                velocity.y = dy;
-                modalImg.style.transform = `scale(1.8) translate(${imgOffset.x}px, ${imgOffset.y}px)`;
+                modalImg.style.transform = `scale(2) translate(${imgOffset.x}px, ${imgOffset.y}px)`;
                 lastX = e.touches[0].clientX;
                 lastY = e.touches[0].clientY;
             }
         });
 
-        window.addEventListener('touchend', function(e) {
-            if (isDragging) {
-                isDragging = false;
-                function inertia() {
-                    velocity.x *= 0.92;
-                    velocity.y *= 0.92;
-                    imgOffset.x += velocity.x;
-                    imgOffset.y += velocity.y;
-                    modalImg.style.transform = `scale(1.8) translate(${imgOffset.x}px, ${imgOffset.y}px)`;
-                    if (Math.abs(velocity.x) > 0.5 || Math.abs(velocity.y) > 0.5) {
-                        animationFrame = requestAnimationFrame(inertia);
-                    }
+        window.addEventListener('touchend', function () {
+            isDragging = false;
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function (e) {
+            const modal = document.getElementById('plotModal');
+            if (modal.style.display === 'flex') {
+                if (e.key === 'Escape') {
+                    document.getElementById('plotModal').style.display = 'none';
+                    document.body.style.overflow = '';
+                    resetZoom();
                 }
-                inertia();
+                if (e.key === 'ArrowLeft') prevPlot();
+                if (e.key === 'ArrowRight') nextPlot();
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    toggleEnlarge();
+                }
             }
         });
 
-        document.addEventListener('keydown', function(e) {
-            const modal = document.getElementById('plotModal');
-            if (modal.style.display === 'flex') {
-                if (e.key === 'Escape') closeModal({target: {classList: {contains: () => true}}});
-                if (e.key === 'ArrowLeft') prevPlot();
-                if (e.key === 'ArrowRight') nextPlot();
-                if (e.key === ' ' || e.key === 'Enter') toggleEnlarge({target: document.getElementById('modalImg')});
+        // Mouse wheel zoom
+        modalImg.addEventListener('wheel', function (e) {
+            if (document.getElementById('plotModal').style.display === 'flex') {
+                e.preventDefault();
+                if (e.deltaY < 0 && !enlarged) {
+                    toggleEnlarge();
+                } else if (e.deltaY > 0 && enlarged) {
+                    toggleEnlarge();
+                }
             }
-        });
+        }, { passive: false });
     </script>
 </body>
+
 </html>

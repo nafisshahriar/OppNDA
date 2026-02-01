@@ -2157,8 +2157,17 @@ GUI.EventLogPanel.nrofEvents = ${eventLogPanelNrofEvents}
     // ============================================================
     // STEP 4: Send to backend /api/run-one endpoint
     // ============================================================
-    // Show user that pipeline is starting
-    alert(`Starting complete pipeline:\n• Saving config: ${settingsFilename}\n• Batch runs: ${batchMode ? batchNum : 'GUI mode'}\n• Post-processing: Will run automatically after simulation`);
+    // Show console and start logging
+    showConsole();
+    clearConsole();
+
+    logStep('🚀 Starting Complete Simulation Pipeline');
+    logInfo(`Config file: ${settingsFilename}`);
+    logInfo(`Mode: ${batchMode ? 'Batch (' + batchNum + ' runs)' : 'GUI Mode'}`);
+    logInfo(`Post-processing: Enabled`);
+    addDivider();
+
+    logStep('⏳ Saving settings and starting simulation...');
 
     fetch("/api/run-one", {
         method: "POST",
@@ -2170,27 +2179,60 @@ GUI.EventLogPanel.nrofEvents = ${eventLogPanelNrofEvents}
         .then((response) => response.json())
         .then((data) => {
             if (data.success) {
-                let resultMsg = 'Pipeline completed successfully!\n\n';
-                resultMsg += `✓ Settings saved: ${data.results.settings_file || settingsFilename}\n`;
-                resultMsg += `✓ Configs saved: ${data.results.configs_saved?.join(', ') || 'None'}\n`;
-                if (data.results.simulation) {
-                    resultMsg += `✓ Simulation: ${data.results.simulation.success ? 'Completed' : 'Failed'}\n`;
+                addDivider();
+                logSuccess('Pipeline completed successfully!');
+                addDivider();
+
+                logSuccess(`Settings saved: ${data.results.settings_file || settingsFilename}`);
+                if (data.results.configs_saved?.length) {
+                    logSuccess(`Configs saved: ${data.results.configs_saved.join(', ')}`);
                 }
+
+                if (data.results.simulation) {
+                    if (data.results.simulation.success) {
+                        logSuccess('Simulation: Completed');
+                    } else {
+                        logError('Simulation: Failed');
+                    }
+                    if (data.results.simulation.output) {
+                        addDivider();
+                        logInfo('📋 Simulation Output:');
+                        formatBackendOutput(data.results.simulation.output);
+                    }
+                }
+
                 if (data.results.post_processing?.length > 0) {
-                    resultMsg += `✓ Post-processing:\n`;
+                    addDivider();
+                    logStep('📊 Post-Processing Results:');
                     data.results.post_processing.forEach(pp => {
-                        resultMsg += `  - ${pp.script}: ${pp.success ? 'Success' : 'Failed'}\n`;
+                        if (pp.success) {
+                            logSuccess(`${pp.script}: Completed`);
+                        } else {
+                            logError(`${pp.script}: Failed`);
+                        }
+                        if (pp.output) {
+                            formatBackendOutput(pp.output);
+                        }
                     });
                 }
-                alert(resultMsg);
+
+                addDivider();
+                logSuccess('🎉 Pipeline finished!');
+                showSaveStatus('✓ Pipeline complete', true);
             } else {
-                alert(`Pipeline error: ${data.message}\n\nCheck console for details.`);
+                addDivider();
+                logError(`Pipeline error: ${data.message}`);
+                if (data.output) {
+                    formatBackendOutput(data.output);
+                }
                 console.error('Pipeline error:', data);
+                showSaveStatus('✗ Pipeline failed', false);
             }
         })
         .catch((error) => {
             console.error("Error:", error);
-            alert("An error occurred while running the pipeline. Check console for details.");
+            logError(`Network error: ${error.message}`);
+            showSaveStatus('✗ Pipeline error', false);
         });
 }
 
@@ -3240,12 +3282,13 @@ document.addEventListener('DOMContentLoaded', function () {
  * Run a single post-processing step (averager, analysis, or regression)
  */
 async function runPostProcessingStep(step) {
-    const logDiv = document.getElementById('postProcessingOutput');
-    const logPre = document.getElementById('postProcessingLog');
+    // Show console and clear it
+    showConsole();
+    clearConsole();
 
-    // Show output area
-    if (logDiv) logDiv.style.display = 'block';
-    if (logPre) logPre.textContent = `Running ${step}...\n`;
+    logStep(`Starting ${step} post-processing...`);
+    logInfo(`Endpoint: /api/run-${step}`);
+    addDivider();
 
     const endpoints = {
         'averager': '/api/run-averager',
@@ -3255,89 +3298,121 @@ async function runPostProcessingStep(step) {
 
     const endpoint = endpoints[step];
     if (!endpoint) {
-        if (logPre) logPre.textContent += `Unknown step: ${step}\n`;
+        logError(`Unknown step: ${step}`);
         return;
     }
 
     try {
+        const startTime = Date.now();
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
         const data = await response.json();
+        const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
         if (data.success) {
-            if (logPre) {
-                logPre.textContent += `✓ ${data.message}\n`;
-                if (data.output) {
-                    logPre.textContent += `\n--- Output ---\n${data.output}\n`;
-                }
+            logSuccess(`${step} completed successfully in ${duration}s`);
+            if (data.message) {
+                logInfo(data.message);
+            }
+            if (data.output) {
+                addDivider();
+                logInfo('📋 Script Output:');
+                formatBackendOutput(data.output);
             }
             showSaveStatus(`✓ ${step} completed`, true);
         } else {
-            if (logPre) {
-                logPre.textContent += `✗ ${data.message}\n`;
-                if (data.output) {
-                    logPre.textContent += `\n--- Error ---\n${data.output}\n`;
-                }
+            logError(`${step} failed after ${duration}s`);
+            if (data.message) {
+                logError(data.message);
+            }
+            if (data.output) {
+                addDivider();
+                logWarning('📋 Error Output:');
+                formatBackendOutput(data.output);
             }
             showSaveStatus(`✗ ${step} failed`, false);
         }
     } catch (error) {
         console.error(`Error running ${step}:`, error);
-        if (logPre) logPre.textContent += `✗ Error: ${error.message}\n`;
+        logError(`Network error: ${error.message}`);
         showSaveStatus(`✗ ${step} error`, false);
     }
+
+    addDivider();
+    logInfo('Processing complete.');
 }
 
 /**
  * Run all post-processing steps in sequence
  */
 async function runAllPostProcessing() {
-    const logDiv = document.getElementById('postProcessingOutput');
-    const logPre = document.getElementById('postProcessingLog');
+    // Show console and clear it
+    showConsole();
+    clearConsole();
 
-    // Show output area
-    if (logDiv) logDiv.style.display = 'block';
-    if (logPre) logPre.textContent = 'Starting all post-processing...\n\n';
+    logStep('🚀 Starting Complete Post-Processing Pipeline');
+    logInfo('Steps: Averager → Analysis → Regression');
+    addDivider();
 
     const steps = ['averager', 'analysis', 'regression'];
+    const stepLabels = {
+        'averager': '📊 Step 1/3: Data Averaging',
+        'analysis': '📈 Step 2/3: Data Analysis',
+        'regression': '🤖 Step 3/3: Regression Models'
+    };
+
     let allSuccess = true;
+    const totalStartTime = Date.now();
 
     for (const step of steps) {
-        if (logPre) logPre.textContent += `→ Running ${step}...\n`;
+        logStep(stepLabels[step] || `Running ${step}`);
 
         try {
+            const stepStartTime = Date.now();
             const response = await fetch(`/api/run-${step}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
             const data = await response.json();
+            const stepDuration = ((Date.now() - stepStartTime) / 1000).toFixed(2);
 
             if (data.success) {
-                if (logPre) {
-                    logPre.textContent += `  ✓ ${data.message}\n`;
-                    if (data.output) {
-                        logPre.textContent += `  --- Output ---\n${data.output}\n`;
-                    }
+                logSuccess(`${step} completed in ${stepDuration}s`);
+                if (data.message) {
+                    logInfo(data.message);
+                }
+                if (data.output) {
+                    formatBackendOutput(data.output);
                 }
             } else {
-                if (logPre) {
-                    logPre.textContent += `  ✗ ${data.message}\n`;
-                    if (data.output) {
-                        logPre.textContent += `  --- Error ---\n${data.output}\n`;
-                    }
+                logError(`${step} failed after ${stepDuration}s`);
+                if (data.message) {
+                    logError(data.message);
+                }
+                if (data.output) {
+                    formatBackendOutput(data.output);
                 }
                 allSuccess = false;
                 // Continue to next step even if one fails
             }
         } catch (error) {
-            if (logPre) logPre.textContent += `  ✗ Error: ${error.message}\n`;
+            logError(`Network error in ${step}: ${error.message}`);
             allSuccess = false;
         }
+
+        addDivider();
     }
 
-    if (logPre) logPre.textContent += `\n${allSuccess ? '✓ All steps completed!' : '⚠ Some steps failed'}`;
+    const totalDuration = ((Date.now() - totalStartTime) / 1000).toFixed(2);
+
+    if (allSuccess) {
+        logSuccess(`🎉 All post-processing completed successfully in ${totalDuration}s`);
+    } else {
+        logWarning(`⚠️ Pipeline completed with errors in ${totalDuration}s`);
+    }
+
     showSaveStatus(allSuccess ? '✓ Post-processing complete' : '⚠ Post-processing had errors', allSuccess);
 }
 

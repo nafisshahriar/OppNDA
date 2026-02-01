@@ -1,6 +1,46 @@
 """
-REST API Endpoints for OppNDA
-Handles configuration file management and script execution.
+REST API Module for OppNDA
+==========================
+
+This module provides RESTful API endpoints for the OppNDA GUI application.
+It handles configuration management, settings persistence, and execution
+of post-processing scripts.
+
+Endpoints Summary:
+    Configuration:
+        - GET/POST ``/api/config/<name>`` - Read/write config files
+        - POST ``/api/save-all`` - Save all configurations
+        - POST ``/api/save-settings`` - Save ONE simulator settings
+    
+    Execution:
+        - POST ``/api/run-one`` - Run complete simulation pipeline
+        - POST ``/api/run-averager`` - Run report averaging
+        - POST ``/api/run-analysis`` - Run visualization generation
+        - POST ``/api/run-regression`` - Run ML regression
+    
+    Streaming (SSE):
+        - GET ``/api/stream-averager`` - Stream averager output
+        - GET ``/api/stream-analysis`` - Stream analysis output
+        - GET ``/api/stream-regression`` - Stream regression output
+
+Example:
+    Starting the API server::
+    
+        from flask import Flask
+        from app.api import api_bp
+        
+        app = Flask(__name__)
+        app.register_blueprint(api_bp, url_prefix='/api')
+        app.run(port=5000)
+
+Attributes:
+    api_bp (Blueprint): Flask Blueprint for API routes.
+    CONFIG_FILES (dict): Mapping of config names to filenames.
+    DEFAULT_ONE_SETTINGS (dict): Default simulator settings.
+
+Note:
+    All endpoints return JSON responses with 'success' and optional 'message' keys.
+    Streaming endpoints use Server-Sent Events (SSE) format.
 """
 
 import os
@@ -12,7 +52,7 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Any
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, Response
 
 # Import path utilities
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -369,7 +409,7 @@ def update_config_field(config_name):
 
 @api_bp.route('/run-one', methods=['POST'])
 def run_one_simulator():
-    """Complete simulation pipeline: Save config → Run ONE → Post-processing.
+    """Complete simulation pipeline: Save config -> Run ONE -> Post-processing.
     
     This endpoint handles the entire workflow:
     1. Saves simulation settings file (.txt)
@@ -901,6 +941,128 @@ def run_regression_only():
         })
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+
+# ============================================================================
+# REAL-TIME STREAMING ENDPOINTS (Server-Sent Events)
+# ============================================================================
+
+def stream_subprocess(command, cwd):
+    """Generator that yields SSE events from subprocess output line by line."""
+    import time
+    
+    yield f"data: {json.dumps({'type': 'start', 'message': f'Starting: {command}'})}\n\n"
+    
+    try:
+        # Start process with line-buffered output
+        process = subprocess.Popen(
+            command,
+            cwd=cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,  # Line buffered
+            universal_newlines=True
+        )
+        
+        # Stream each line as it's produced
+        for line in iter(process.stdout.readline, ''):
+            if line:
+                line = line.rstrip('\n\r')
+                # Determine log type based on content
+                log_type = 'info'
+                if 'error' in line.lower() or 'exception' in line.lower() or 'traceback' in line.lower():
+                    log_type = 'error'
+                elif 'warning' in line.lower() or 'warn' in line.lower():
+                    log_type = 'warning'
+                elif 'success' in line.lower() or 'completed' in line.lower() or '✓' in line:
+                    log_type = 'success'
+                elif 'processing' in line.lower() or 'running' in line.lower() or 'starting' in line.lower():
+                    log_type = 'step'
+                
+                yield f"data: {json.dumps({'type': 'log', 'level': log_type, 'message': line})}\n\n"
+        
+        process.stdout.close()
+        return_code = process.wait()
+        
+        if return_code == 0:
+            yield f"data: {json.dumps({'type': 'complete', 'success': True, 'message': 'Process completed successfully'})}\n\n"
+        else:
+            yield f"data: {json.dumps({'type': 'complete', 'success': False, 'message': f'Process exited with code {return_code}'})}\n\n"
+            
+    except Exception as e:
+        yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+    
+    yield "data: {\"type\": \"end\"}\n\n"
+
+
+@api_bp.route('/stream-averager', methods=['GET'])
+def stream_averager():
+    """Stream averager output in real-time using SSE."""
+    base_dir = current_app.config['BASE_DIR']
+    core_dir = current_app.config['CORE_DIR']
+    
+    averager_script = core_dir / 'averager.py'
+    if not averager_script.exists():
+        return jsonify({'success': False, 'message': 'averager.py not found'}), 404
+    
+    command = [sys.executable, '-u', str(averager_script)]  # -u for unbuffered
+    
+    return Response(
+        stream_subprocess(command, str(base_dir)),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
+        }
+    )
+
+
+@api_bp.route('/stream-analysis', methods=['GET'])
+def stream_analysis():
+    """Stream analysis output in real-time using SSE."""
+    base_dir = current_app.config['BASE_DIR']
+    core_dir = current_app.config['CORE_DIR']
+    
+    analysis_script = core_dir / 'analysis.py'
+    if not analysis_script.exists():
+        return jsonify({'success': False, 'message': 'analysis.py not found'}), 404
+    
+    command = [sys.executable, '-u', str(analysis_script)]  # -u for unbuffered
+    
+    return Response(
+        stream_subprocess(command, str(base_dir)),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
+        }
+    )
+
+
+@api_bp.route('/stream-regression', methods=['GET'])
+def stream_regression():
+    """Stream regression output in real-time using SSE."""
+    base_dir = current_app.config['BASE_DIR']
+    core_dir = current_app.config['CORE_DIR']
+    
+    regression_script = core_dir / 'regression.py'
+    if not regression_script.exists():
+        return jsonify({'success': False, 'message': 'regression.py not found'}), 404
+    
+    command = [sys.executable, '-u', str(regression_script)]  # -u for unbuffered
+    
+    return Response(
+        stream_subprocess(command, str(base_dir)),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
+        }
+    )
 
 
 def deep_merge(base: Dict[str, Any], updates: Dict[str, Any]) -> Dict[str, Any]:

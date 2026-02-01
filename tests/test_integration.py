@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Integration Tests for OppNDA
-Tests the complete flow: settings modification → save → run simulation → post-processing.
+Tests the complete flow: settings modification -> save -> run simulation -> post-processing.
 """
 
 import os
