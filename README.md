@@ -1,4 +1,4 @@
-# OppNDA v2.0 Modern UI
+# OppNDA
 
 
 **ONE Simulator Network Data Analyzer** — A web-based toolkit for configuring ONE Simulator scenarios and analyzing simulation results.
