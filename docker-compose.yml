@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
   oppnda:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: oppnda
+    container_name: OppNDA
     ports:
       - "5001:5001"
     volumes:
@@ -15,7 +13,7 @@ services:
       - ./reports:/app/reports:ro
       # Mount output directories
       - ./plots:/app/plots
-      - ./regression_results:/app/regression_results
+      - ./regression_results:/app/plots/regression_results
     environment:
       - FLASK_ENV=production
     restart: unless-stopped
@@ -27,11 +25,11 @@ services:
       start_period: 10s
 
   # Optional: Development mode with hot reload
-  oppnda-dev:
+  OppNDA-dev:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: oppnda-dev
+    container_name: OppNDA-dev
     ports:
       - "5001:5001"
     volumes:

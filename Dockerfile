@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create directories for output
-RUN mkdir -p plots regression_results
+RUN mkdir -p plots/regression_results
 
 # Expose port
 EXPOSE 5001

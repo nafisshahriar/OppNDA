@@ -332,6 +332,49 @@ function runStreamingStepAsync(step) {
     });
 }
 
+/**
+ * Format and display backend output (multi-line string or array)
+ * Parses output lines and logs them with appropriate styling
+ */
+function formatBackendOutput(output) {
+    if (!output) return;
+
+    // Handle array or string
+    const lines = Array.isArray(output) ? output : output.split('\n');
+
+    lines.forEach(line => {
+        if (!line || !line.trim()) return;
+
+        const trimmed = line.trim();
+
+        // Detect error lines
+        if (trimmed.toLowerCase().includes('error') ||
+            trimmed.toLowerCase().includes('failed') ||
+            trimmed.startsWith('✗')) {
+            logError(trimmed);
+        }
+        // Detect warning lines
+        else if (trimmed.toLowerCase().includes('warning') ||
+            trimmed.startsWith('⚠')) {
+            logWarning(trimmed);
+        }
+        // Detect success lines
+        else if (trimmed.toLowerCase().includes('success') ||
+            trimmed.toLowerCase().includes('completed') ||
+            trimmed.startsWith('✓')) {
+            logSuccess(trimmed);
+        }
+        // Step/progress lines
+        else if (trimmed.startsWith('→') || trimmed.startsWith('>>')) {
+            logStep(trimmed);
+        }
+        // Regular output
+        else {
+            logOutput(trimmed);
+        }
+    });
+}
+
 // Make functions globally available
 window.clearConsole = clearConsole;
 window.copyConsole = copyConsole;
@@ -345,3 +388,4 @@ window.addDivider = addDivider;
 window.showConsole = showConsole;
 window.runStreamingStep = runStreamingStep;
 window.runAllStreamingSteps = runAllStreamingSteps;
+window.formatBackendOutput = formatBackendOutput;

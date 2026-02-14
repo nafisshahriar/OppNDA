@@ -1,0 +1,199 @@
+{
+    "one_placeholders": {
+        "router": "%%Group.router%%",
+        "seed": "%%MovementModel.rngSeed%%",
+        "ttl": "%%Group.msgTtl%%",
+        "buffer": "%%Group.bufferSize%%"
+    },
+    "routers": [
+        "EpidemicRouter",
+        "ProphetRouter",
+        "SprayAndWaitRouter",
+        "PassiveRouter",
+        "DirectDeliveryRouter",
+        "FirstContactRouter",
+        "MaxPropRouter",
+        "EpidemicOracleRouter",
+        "ProphetV2Router",
+        "LifeRouter"
+    ],
+    "movement_models": [
+        "BusControlSystem",
+        "BusMovement",
+        "BusTravellerMovement",
+        "CarMovement",
+        "ClusterMovement",
+        "EveningActivityControlSystem",
+        "EveningActivityMovement",
+        "EveningTrip",
+        "ExtendedMovementModel",
+        "ExternalMovement",
+        "ExternalPathMovement",
+        "GridLocation",
+        "HomeActivityMovement",
+        "LinearFormation",
+        "LinearMovement",
+        "MapBasedMovement",
+        "MapRouteMovement",
+        "ModifiedRandomDirection",
+        "MovementModel",
+        "OfficeActivityMovement",
+        "RandomDirection",
+        "RandomWalk",
+        "RandomWaypoint",
+        "ShortestPathMapBasedMovement",
+        "StationaryMovement",
+        "SwitchableMovement",
+        "TransportMovement",
+        "WorkingDayMovement"
+    ],
+    "metrics": [
+        "delivery_prob",
+        "latency_avg",
+        "latency_med",
+        "overhead_ratio",
+        "hopcount_avg",
+        "hopcount_med",
+        "buffertime_avg",
+        "buffertime_med",
+        "rtt_avg",
+        "rtt_med",
+        "sim_time",
+        "created",
+        "started",
+        "relayed",
+        "aborted",
+        "dropped",
+        "removed",
+        "delivered",
+        "delivery_ratio",
+        "oppo_cahce_hit",
+        "static_cache_hit",
+        "drop_pit",
+        "duplicated_query"
+    ],
+    "plots": [
+        "line_plots",
+        "3d_surface",
+        "violin_plots",
+        "heatmaps",
+        "pairplot",
+        "export_csv"
+    ],
+    "models": [
+        "Linear Regression",
+        "Ridge Regression",
+        "Lasso Regression",
+        "Decision Tree",
+        "Random Forest",
+        "Gradient Boosting",
+        "KNN"
+    ],
+    "predictors": [
+        "BufferSize",
+        "TTL",
+        "overhead_ratio",
+        "hopcount_avg",
+        "latency_avg",
+        "buffertime_avg",
+        "rtt_avg",
+        "created",
+        "delivered",
+        "relayed",
+        "oppo_cahce_hit",
+        "static_cache_hit",
+        "drop_pit",
+        "duplicated_query"
+    ],
+    "report_types": [
+        "MessageStatsReport",
+        "CreatedMessagesReport",
+        "DeliveredMessagesReport",
+        "BufferOccupancyReport"
+    ],
+    "pipeline_steps": [
+        {
+            "name": "averager",
+            "script": "averager.py",
+            "label": "📊 Data Averaging",
+            "enabled": true,
+            "requires_ml": false
+        },
+        {
+            "name": "analysis",
+            "script": "analysis.py",
+            "label": "📈 Data Analysis",
+            "enabled": true,
+            "requires_ml": false
+        },
+        {
+            "name": "regression",
+            "script": "regression.py",
+            "label": "🤖 Regression Models",
+            "enabled": true,
+            "requires_ml": true
+        }
+    ],
+    "default_groups": [
+        {
+            "groupID": "p",
+            "numHosts": 5,
+            "movementModel": "ShortestPathMapBasedMovement",
+            "routeFile": "",
+            "routeType": 0,
+            "router": "EpidemicRouter",
+            "activeTimes": "0",
+            "messageTTL": "50"
+        },
+        {
+            "groupID": "c",
+            "numHosts": 10,
+            "movementModel": "ShortestPathMapBasedMovement",
+            "routeFile": "",
+            "routeType": 0,
+            "router": "EpidemicRouter",
+            "activeTimes": "0",
+            "messageTTL": "100"
+        },
+        {
+            "groupID": "w",
+            "numHosts": 20,
+            "movementModel": "ShortestPathMapBasedMovement",
+            "routeFile": "",
+            "routeType": 0,
+            "router": "EpidemicRouter",
+            "activeTimes": "0",
+            "messageTTL": "150"
+        },
+        {
+            "groupID": "t",
+            "numHosts": 15,
+            "movementModel": "MapRouteMovement",
+            "routeFile": "data/tram3.wkt",
+            "routeType": 1,
+            "router": "EpidemicRouter",
+            "activeTimes": "0",
+            "messageTTL": "200"
+        },
+        {
+            "groupID": "t",
+            "numHosts": 12,
+            "movementModel": "MapRouteMovement",
+            "routeFile": "data/tram4.wkt",
+            "routeType": 2,
+            "router": "EpidemicRouter",
+            "activeTimes": "0",
+            "messageTTL": "250"
+        },
+        {
+            "groupID": "t",
+            "numHosts": 8,
+            "movementModel": "MapRouteMovement",
+            "routeFile": "data/tram10.wkt",
+            "routeType": 2,
+            "router": "EpidemicRouter",
+            "activeTimes": "0",
+            "messageTTL": "300"
+        }
+    ]
+}

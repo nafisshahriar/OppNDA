@@ -60,13 +60,17 @@ from core.path_utils import resolve_absolute_path, validate_path
 
 api_bp = Blueprint('api', __name__)
 
+# Track active subprocesses for termination support
+_active_processes = {}
+
 # ============================================================================
 # CONSTANTS
 # ============================================================================
 CONFIG_FILES = {
     'analysis': 'analysis_config.json',
     'averager': 'averager_config.json',
-    'regression': 'regression_config.json'
+    'regression': 'regression_config.json',
+    'gui_options': 'gui_options.json'
 }
 
 DEFAULT_SCENARIO_NAME = 'default_scenario'
@@ -142,13 +146,27 @@ def generate_default_settings(overrides: Optional[Dict[str, Any]] = None) -> str
     # Generate timestamp for unique scenario names
     scenario_name = config.get('scenario_name', DEFAULT_SCENARIO_NAME)
     
+    # Build Scenario.name dynamically from gui_options placeholders
+    try:
+        gui_opts = _load_gui_options()
+        placeholders = gui_opts.get('one_placeholders', {})
+    except Exception:
+        placeholders = {}
+    
+    if placeholders:
+        placeholder_parts = [f'{p}' for p in placeholders.values()]
+        scenario_name_template = scenario_name + '_' + '_'.join(placeholder_parts)
+    else:
+        # Fallback: basic template
+        scenario_name_template = f"{scenario_name}_%%Group.router%%_%%MovementModel.rngSeed%%"
+    
     content = f"""#
 # OppNDA Default Simulation Settings
 # Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 #
 
 ## Scenario settings
-Scenario.name = {scenario_name}_%%Group.router%%_%%MovementModel.rngSeed%%
+Scenario.name = {scenario_name_template}
 Scenario.simulateConnections = {'true' if config['simulate_connections'] else 'false'}
 Scenario.updateInterval = {config['update_interval']}
 Scenario.endTime = {config['end_time']}
@@ -237,6 +255,36 @@ def get_config_path(config_name: str) -> Path:
     """
     config_dir = current_app.config['CONFIG_DIR']
     return config_dir / CONFIG_FILES.get(config_name, '')
+
+
+def _load_gui_options():
+    """Load gui_options.json from the config directory.
+    
+    Returns:
+        dict: The GUI options config, or empty dict if not found.
+    """
+    try:
+        config_dir = current_app.config['CONFIG_DIR']
+        gui_options_path = config_dir / CONFIG_FILES.get('gui_options', 'gui_options.json')
+        if gui_options_path.exists():
+            with open(gui_options_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {}
+
+
+@api_bp.route('/gui-options', methods=['GET'])
+def get_gui_options():
+    """Return the centralized GUI options config.
+    
+    The frontend uses this to populate dropdowns, Tagify whitelists,
+    and other dynamic UI elements instead of hardcoding them.
+    """
+    options = _load_gui_options()
+    if not options:
+        return jsonify({'error': 'gui_options.json not found'}), 404
+    return jsonify(options)
 
 
 # ============================================================================
@@ -524,7 +572,7 @@ def run_one_simulator():
         full_command = ' '.join(command_parts)
         
         # ============================================================
-        # STEP 4: Run ONE simulator
+        # STEP 4: Return streaming response for ONE simulator
         # ============================================================
         # Check if ONE exists
         one_path = base_dir / (one_cmd.replace('./', ''))
@@ -536,85 +584,280 @@ def run_one_simulator():
                 'command': full_command
             }), 404
         
-        # Run ONE synchronously and wait for completion
-        sim_result = subprocess.run(
-            full_command,
-            shell=shell_needed,
-            cwd=str(base_dir),
-            capture_output=True,
-            text=True
-        )
-        
-        results['simulation'] = {
+        # Store the results for the streaming generator
+        save_results = {
+            'settings_file': results.get('settings_file'),
+            'configs_saved': results['configs_saved'],
             'command': full_command,
-            'success': sim_result.returncode == 0,
-            'output': sim_result.stdout if sim_result.returncode == 0 else sim_result.stderr
+            'batch_count': batch_count,
+            'enable_ml': enable_ml,
+            'core_dir': core_dir,
+            'base_dir': base_dir
         }
         
-        if sim_result.returncode != 0:
-            return jsonify({
-                'success': False,
-                'message': 'ONE simulation failed',
-                'results': results
-            }), 500
-        
-        # ============================================================
-        # STEP 5: Auto-run post-processing pipeline
-        # ============================================================
-        # Run averager.py
-        averager_script = core_dir / 'averager.py'
-        if averager_script.exists():
-            result = subprocess.run(
-                [sys.executable, str(averager_script)],
-                cwd=str(base_dir),
-                capture_output=True,
-                text=True
-            )
-            results['post_processing'].append({
-                'script': 'averager.py',
-                'success': result.returncode == 0,
-                'output': result.stdout if result.returncode == 0 else result.stderr
-            })
-        
-        # Run analysis.py
-        analysis_script = core_dir / 'analysis.py'
-        if analysis_script.exists():
-            result = subprocess.run(
-                [sys.executable, str(analysis_script)],
-                cwd=str(base_dir),
-                capture_output=True,
-                text=True
-            )
-            results['post_processing'].append({
-                'script': 'analysis.py',
-                'success': result.returncode == 0,
-                'output': result.stdout if result.returncode == 0 else result.stderr
-            })
-        
-        # Run regression.py if ML enabled
-        if enable_ml:
-            regression_script = core_dir / 'regression.py'
-            if regression_script.exists():
-                result = subprocess.run(
-                    [sys.executable, str(regression_script)],
+        def generate_simulation_stream():
+            """Generator that yields SSE events for the simulation."""
+            import time
+            
+            # Helper function to create SSE data line
+            def sse_event(event_type, message, level=None, success=None):
+                data = {'type': event_type, 'message': message}
+                if level is not None:
+                    data['level'] = level
+                if success is not None:
+                    data['success'] = success
+                return f"data: {json.dumps(data)}\n\n"
+            
+            # First, send the save results
+            settings_file = save_results['settings_file']
+            yield sse_event('info', f'Settings saved: {settings_file}')
+            
+            if save_results['configs_saved']:
+                configs = ', '.join(save_results['configs_saved'])
+                yield sse_event('info', f'Configs saved: {configs}')
+            
+            yield sse_event('step', 'Starting ONE simulator...')
+            yield sse_event('info', f"Command: {save_results['command']}")
+            
+            batch_count = save_results['batch_count']
+            if batch_count > 0:
+                yield sse_event('info', f'Batch mode: {batch_count} simulations')
+            
+            sim_success = False
+            try:
+                # Start simulation with streaming output
+                process = subprocess.Popen(
+                    full_command,
+                    shell=shell_needed,
                     cwd=str(base_dir),
-                    capture_output=True,
-                    text=True
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    bufsize=1,
+                    universal_newlines=True
                 )
-                results['post_processing'].append({
-                    'script': 'regression.py',
-                    'success': result.returncode == 0,
-                    'output': result.stdout if result.returncode == 0 else result.stderr
-                })
+                
+                # Track process for termination support
+                _active_processes['simulation'] = process
+                
+                # Track progress
+                sim_count = 0
+                start_time = time.time()
+                
+                # Stream each line as it's produced
+                for line in iter(process.stdout.readline, ''):
+                    if line:
+                        line = line.rstrip('\n\r')
+                        
+                        # Detect simulation completion
+                        if 'Simulation done' in line or 'Starting batch' in line:
+                            sim_count += 1
+                            if batch_count > 0:
+                                line = f"[{sim_count}/{batch_count}] {line}"
+                        
+                        # Determine log type based on content
+                        log_level = 'info'
+                        if 'error' in line.lower() or 'exception' in line.lower():
+                            log_level = 'error'
+                        elif 'warning' in line.lower():
+                            log_level = 'warning'
+                        elif 'done' in line.lower() or 'completed' in line.lower() or 'finished' in line.lower():
+                            log_level = 'success'
+                        elif 'starting' in line.lower() or 'running' in line.lower():
+                            log_level = 'step'
+                        
+                        yield sse_event('log', line, level=log_level)
+                
+                process.stdout.close()
+                return_code = process.wait()
+                
+                # Clean up process tracking
+                _active_processes.pop('simulation', None)
+                
+                elapsed = time.time() - start_time
+                if elapsed > 60:
+                    elapsed_str = f"{elapsed/60:.1f} minutes"
+                else:
+                    elapsed_str = f"{elapsed:.1f} seconds"
+                
+                if return_code == 0:
+                    yield sse_event('complete', f'Simulation completed in {elapsed_str}', success=True)
+                    sim_success = True
+                else:
+                    yield sse_event('complete', f'Simulation failed with exit code {return_code}', success=False)
+                    
+            except Exception as e:
+                _active_processes.pop('simulation', None)
+                yield sse_event('error', str(e))
+            
+            # ============================================================
+            # STEP 5: Run post-processing pipeline after simulation
+            # ============================================================
+            if sim_success:
+                pp_core_dir = save_results['core_dir']
+                pp_base_dir = save_results['base_dir']
+                pp_enable_ml = save_results['enable_ml']
+                
+                # Build post-processing steps from gui_options config
+                gui_opts = _load_gui_options()
+                pipeline_config = gui_opts.get('pipeline_steps', [])
+                
+                pp_steps = []
+                if pipeline_config:
+                    for i, step_cfg in enumerate(pipeline_config, 1):
+                        if not step_cfg.get('enabled', True):
+                            continue
+                        if step_cfg.get('requires_ml', False) and not pp_enable_ml:
+                            continue
+                        step_name = step_cfg['name']
+                        step_script = pp_core_dir / step_cfg['script']
+                        step_label = step_cfg.get('label', f'Step {i}: {step_name}')
+                        pp_steps.append((step_name, step_script, step_label))
+                else:
+                    # Fallback: hardcoded default pipeline
+                    pp_steps = [
+                        ('averager', pp_core_dir / 'averager.py', '📊 Step 1: Data Averaging'),
+                        ('analysis', pp_core_dir / 'analysis.py', '📈 Step 2: Data Analysis'),
+                    ]
+                    if pp_enable_ml:
+                        pp_steps.append(
+                            ('regression', pp_core_dir / 'regression.py', '🤖 Step 3: Regression Models')
+                        )
+                
+                yield sse_event('step', '🔄 Starting OppNDA Post-Processing Pipeline...')
+                
+                all_pp_success = True
+                for step_name, script_path, label in pp_steps:
+                    if not script_path.exists():
+                        yield sse_event('log', f'{step_name}.py not found, skipping', level='warning')
+                        continue
+                    
+                    yield sse_event('step', label)
+                    
+                    try:
+                        pp_process = subprocess.Popen(
+                            [sys.executable, '-u', str(script_path)],
+                            cwd=str(pp_base_dir),
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT,
+                            text=True,
+                            bufsize=1,
+                            universal_newlines=True
+                        )
+                        
+                        # Track for termination
+                        _active_processes['post_processing'] = pp_process
+                        
+                        for pp_line in iter(pp_process.stdout.readline, ''):
+                            if pp_line:
+                                pp_line = pp_line.rstrip('\n\r')
+                                pp_level = 'info'
+                                if 'error' in pp_line.lower() or 'exception' in pp_line.lower():
+                                    pp_level = 'error'
+                                elif 'warning' in pp_line.lower():
+                                    pp_level = 'warning'
+                                elif 'success' in pp_line.lower() or 'completed' in pp_line.lower():
+                                    pp_level = 'success'
+                                elif 'processing' in pp_line.lower() or 'starting' in pp_line.lower():
+                                    pp_level = 'step'
+                                yield sse_event('log', pp_line, level=pp_level)
+                        
+                        pp_process.stdout.close()
+                        pp_rc = pp_process.wait()
+                        _active_processes.pop('post_processing', None)
+                        
+                        if pp_rc == 0:
+                            yield sse_event('log', f'{step_name} completed successfully', level='success')
+                        else:
+                            yield sse_event('log', f'{step_name} failed with exit code {pp_rc}', level='error')
+                            all_pp_success = False
+                    
+                    except Exception as pp_e:
+                        _active_processes.pop('post_processing', None)
+                        yield sse_event('log', f'{step_name} error: {str(pp_e)}', level='error')
+                        all_pp_success = False
+                
+                if all_pp_success:
+                    yield sse_event('complete', '🎉 Full pipeline completed: Simulation + Post-Processing', success=True)
+                else:
+                    yield sse_event('complete', 'Pipeline completed with post-processing errors', success=False)
+            
+            yield 'data: {"type": "end"}\n\n'
         
-        return jsonify({
-            'success': True,
-            'message': 'Complete pipeline executed successfully',
-            'results': results
-        })
+        return Response(
+            generate_simulation_stream(),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'X-Accel-Buffering': 'no'
+            }
+        )
         
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+
+@api_bp.route('/terminate', methods=['POST'])
+def terminate_process():
+    """Terminate a running simulation or post-processing subprocess.
+    
+    Request JSON:
+        - target: (optional) 'simulation', 'post_processing', or 'all' (default: 'all')
+    
+    Returns:
+        { 'success': bool, 'message': str, 'terminated': list }
+    """
+    try:
+        data = request.get_json() or {}
+        target = data.get('target', 'all')
+        terminated = []
+        
+        targets_to_kill = []
+        if target == 'all':
+            targets_to_kill = list(_active_processes.keys())
+        elif target in _active_processes:
+            targets_to_kill = [target]
+        
+        for proc_name in targets_to_kill:
+            process = _active_processes.get(proc_name)
+            if process and process.poll() is None:  # Still running
+                try:
+                    # On Windows, use taskkill to terminate the entire process tree
+                    if platform.system() == 'Windows':
+                        subprocess.run(
+                            ['taskkill', '/F', '/T', '/PID', str(process.pid)],
+                            capture_output=True
+                        )
+                    else:
+                        import signal
+                        os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+                    terminated.append(proc_name)
+                except Exception as e:
+                    # Fallback: direct kill
+                    try:
+                        process.kill()
+                        terminated.append(proc_name)
+                    except Exception:
+                        pass
+                finally:
+                    _active_processes.pop(proc_name, None)
+        
+        if terminated:
+            return jsonify({
+                'success': True,
+                'message': f'Terminated: {", ".join(terminated)}',
+                'terminated': terminated
+            })
+        else:
+            return jsonify({
+                'success': True,
+                'message': 'No active processes to terminate',
+                'terminated': []
+            })
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 @api_bp.route('/run', methods=['POST'])
@@ -965,6 +1208,9 @@ def stream_subprocess(command, cwd):
             universal_newlines=True
         )
         
+        # Track process for termination support
+        _active_processes['post_processing'] = process
+        
         # Stream each line as it's produced
         for line in iter(process.stdout.readline, ''):
             if line:
@@ -984,6 +1230,7 @@ def stream_subprocess(command, cwd):
         
         process.stdout.close()
         return_code = process.wait()
+        _active_processes.pop('post_processing', None)
         
         if return_code == 0:
             yield f"data: {json.dumps({'type': 'complete', 'success': True, 'message': 'Process completed successfully'})}\n\n"
@@ -991,6 +1238,7 @@ def stream_subprocess(command, cwd):
             yield f"data: {json.dumps({'type': 'complete', 'success': False, 'message': f'Process exited with code {return_code}'})}\n\n"
             
     except Exception as e:
+        _active_processes.pop('post_processing', None)
         yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
     
     yield "data: {\"type\": \"end\"}\n\n"
@@ -1340,3 +1588,44 @@ def auto_save_config():
             'error': str(e)
         }), 500
 
+
+# ============================================================================
+# WKT PROXY ENDPOINTS (to avoid CORS issues)
+# ============================================================================
+
+@api_bp.route('/wkt/test_city', methods=['POST'])
+def proxy_wkt_test_city():
+    """Proxy requests to WKT generator's test_city endpoint.
+    
+    This avoids CORS issues when the GUI on port 5001 needs to
+    access the WKT generator service on port 5000.
+    """
+    import requests
+    
+    try:
+        data = request.get_json() or {}
+        
+        # Forward request to WKT generator
+        response = requests.post(
+            'http://localhost:5000/test_city',
+            json=data,
+            timeout=10
+        )
+        
+        return jsonify(response.json()), response.status_code
+        
+    except requests.exceptions.ConnectionError:
+        return jsonify({
+            'available': False,
+            'message': 'WKT Generator service not running. Start it with: python -m tools.wktGenerator.wkt_app'
+        }), 503
+    except requests.exceptions.Timeout:
+        return jsonify({
+            'available': False,
+            'message': 'WKT Generator service timed out'
+        }), 504
+    except Exception as e:
+        return jsonify({
+            'available': False,
+            'message': f'Error contacting WKT Generator: {str(e)}'
+        }), 500

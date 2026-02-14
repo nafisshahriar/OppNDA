@@ -327,18 +327,44 @@ class PatternBuilder {
     }
 
     savePattern() {
-        // Auto-save the pattern
-        const patternString = this.getPatternString();
+        // Auto-save the pattern to AVERAGER config (not scenario)
+        // Build the components object with name:position mapping
+        const components = {};
+        this.patternNames.forEach((name, index) => {
+            components[name] = index;
+        });
 
-        if (window.markDirty) {
-            window.markDirty('scenario', 'file_pattern', patternString);
-        }
+        // Save to averager config via API
+        const patternData = {
+            filename_pattern: {
+                delimiter: this.delimiter,
+                components: components
+            }
+        };
+
+        // Use fetch to save directly to averager config
+        fetch('/api/config/averager', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(patternData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error saving pattern:', data.error);
+                }
+            })
+            .catch(error => {
+                console.warn('Pattern auto-save failed:', error.message);
+            });
 
         // Also store in session for later reference
         sessionStorage.setItem('filePattern', JSON.stringify({
             names: this.patternNames,
             delimiter: this.delimiter,
-            pattern: patternString
+            pattern: this.getPatternString()
         }));
 
         // Update Group By dropdowns with new pattern names
@@ -398,6 +424,44 @@ class PatternBuilder {
             delimiter: this.delimiter,
             pattern: this.getPatternString()
         };
+    }
+
+    /**
+     * Build a ONE simulator Scenario.name template from the pattern components.
+     * Maps human-readable pattern names to ONE simulator %%placeholder%% syntax.
+     * 'scenario' is the base name (handled separately as the prefix).
+     * 'reports' is auto-appended by ONE and excluded from the template.
+     * Any unknown names are included as literal text.
+     * 
+     * @param {string} scenarioName - The base scenario name to use as prefix
+     * @returns {string} The Scenario.name template string for ONE settings
+     */
+    getScenarioNameTemplate(scenarioName) {
+        // Use config-loaded placeholders if available, otherwise fall back to defaults
+        const ONE_PLACEHOLDERS = this._onePlaceholders || {
+            'router': '%%Group.router%%',
+            'seed': '%%MovementModel.rngSeed%%',
+            'ttl': '%%Group.msgTtl%%',
+            'buffer': '%%Group.bufferSize%%',
+        };
+
+        const parts = [];
+        for (const name of this.patternNames) {
+            if (name === 'scenario') {
+                // 'scenario' maps to the literal scenario name prefix
+                parts.push(scenarioName);
+            } else if (name === 'reports') {
+                // 'reports' is auto-appended by ONE — skip it in the template
+                continue;
+            } else if (ONE_PLACEHOLDERS[name]) {
+                parts.push(ONE_PLACEHOLDERS[name]);
+            } else {
+                // Unknown component — include as literal text
+                parts.push(name);
+            }
+        }
+
+        return parts.join(this.delimiter);
     }
 }
 

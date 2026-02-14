@@ -6,7 +6,7 @@ const interfaceSettings = [
 
 // Interface Tagify will be initialized in DOMContentLoaded
 // Default values for group settings
-const groupSettings = [
+let groupSettings = [
     { groupID: 'p', numHosts: 5, movementModel: "ShortestPathMapBasedMovement", routeFile: "", routeType: 0, router: "EpidemicRouter", activeTimes: "0", messageTTL: "50", actions: "Edit/Delete" },
     { groupID: 'c', numHosts: 10, movementModel: "ShortestPathMapBasedMovement", routeFile: "", routeType: 0, router: "EpidemicRouter", activeTimes: "0", messageTTL: "100", actions: "Edit/Delete" },
     { groupID: 'w', numHosts: 20, movementModel: "ShortestPathMapBasedMovement", routeFile: "", routeType: 0, router: "EpidemicRouter", activeTimes: "0", messageTTL: "150", actions: "Edit/Delete" },
@@ -334,7 +334,7 @@ const events = [{
     eventClass: 'MessageEventGenerator',
     interval: `${25}, ${35}`,
     size: `${500}k, ${1}M`,
-    hosts: `${0} , ${220}`,
+    hosts: `${0} , ${126}`,
     prefix: 'M'
 }];
 let table = document.getElementById('eventList').getElementsByTagName('tbody')[0];
@@ -809,7 +809,7 @@ function applyConfigToForm(config) {
         document.getElementById('optimizationRandomizeUpdateOrder').checked = config['Optimization.randomizeUpdateOrder'] === 'true';
     }
 
-    alert('Configuration imported successfully! Review the settings before saving.');
+    alert('Configuration imported successfully! Review the settings before simulation.');
 
     // Update batch preview to reflect imported values
     setTimeout(() => {
@@ -983,9 +983,17 @@ function saveAllSettings() {
     if (document.getElementById("nameAdd").checked) {
         name += '_' + formattedDateTime;
     }
+    // Build Scenario.name dynamically from Pattern Builder
+    let scenarioNameTemplate;
+    if (window.patternBuilder && window.patternBuilder.patternNames.length > 0) {
+        scenarioNameTemplate = window.patternBuilder.getScenarioNameTemplate(name);
+    } else {
+        // Fallback: basic template without pattern builder
+        scenarioNameTemplate = `${name}_%%Group.router%%_%%MovementModel.rngSeed%%_%%Group.msgTtl%%`;
+    }
     content += `
 ## Scenario settings
-Scenario.name = ${name}_%%Group.router%%_%%MovementModel.rngSeed%%_%%Group.msgTtl%%
+Scenario.name = ${scenarioNameTemplate}
 
 Scenario.simulateConnections = ${document.getElementById("simulateConnections").checked ? "true" : "false"}
 Scenario.updateInterval = ${document.getElementById("updateInterval").value}
@@ -1318,8 +1326,8 @@ GUI.EventLogPanel.nrofEvents = ${eventLogPanelNrofEvents}
     // Analysis config
     payload.analysis = collectAnalysisConfig();
 
-    // Batch config  
-    payload.batch = collectBatchConfig();
+    // Averager config (batch processing)
+    payload.averager = collectBatchConfig();
 
     // Regression config
     payload.regression = collectRegressionConfig();
@@ -1438,16 +1446,24 @@ function collectBatchConfig() {
         ignoreFields = batchIgnoreFieldsTagify.value.map(t => t.value);
     }
 
-    // Collect dynamic filename pattern components
+    // Collect dynamic filename pattern components from Pattern Builder
     const components = {};
-    const componentRows = document.querySelectorAll('#batchComponentsBody tr');
-    componentRows.forEach(row => {
-        const nameInput = row.querySelector('input[data-field="name"]');
-        const posInput = row.querySelector('input[data-field="position"]');
-        if (nameInput && posInput && nameInput.value.trim()) {
-            components[nameInput.value.trim()] = parseInt(posInput.value) || 0;
-        }
-    });
+    if (window.patternBuilder && window.patternBuilder.patternNames) {
+        // Get pattern from the visual Pattern Builder
+        window.patternBuilder.patternNames.forEach((name, index) => {
+            components[name] = index;
+        });
+    } else {
+        // Fallback: read from the table (legacy)
+        const componentRows = document.querySelectorAll('#batchComponentsBody tr');
+        componentRows.forEach(row => {
+            const nameInput = row.querySelector('input[data-field="name"]');
+            const posInput = row.querySelector('input[data-field="position"]');
+            if (nameInput && posInput && nameInput.value.trim()) {
+                components[nameInput.value.trim()] = parseInt(posInput.value) || 0;
+            }
+        });
+    }
 
     // Collect dynamic average groups
     const averageGroups = [];
@@ -1463,9 +1479,20 @@ function collectBatchConfig() {
             if (groupByInput.tagify && groupByInput.tagify.value) {
                 groupByArray = groupByInput.tagify.value.map(tag => tag.value);
             } else {
-                // Fallback: parse comma-separated values
+                // Fallback: try to parse Tagify JSON format or comma-separated values
                 const groupByStr = groupByInput.value.trim();
-                groupByArray = groupByStr ? groupByStr.split(',').map(s => s.trim()).filter(s => s) : [];
+                if (groupByStr.startsWith('[')) {
+                    // Tagify JSON format
+                    try {
+                        const parsed = JSON.parse(groupByStr);
+                        groupByArray = parsed.map(item => typeof item === 'object' ? item.value : item);
+                    } catch (e) {
+                        groupByArray = [];
+                    }
+                } else {
+                    // Comma-separated values
+                    groupByArray = groupByStr ? groupByStr.split(',').map(s => s.trim()).filter(s => s) : [];
+                }
             }
 
             averageGroups.push({
@@ -1847,9 +1874,17 @@ function runONE() {
     if (document.getElementById("nameAdd").checked) {
         name += '_' + formattedDateTime;
     }
+    // Build Scenario.name dynamically from Pattern Builder
+    let scenarioNameTemplate;
+    if (window.patternBuilder && window.patternBuilder.patternNames.length > 0) {
+        scenarioNameTemplate = window.patternBuilder.getScenarioNameTemplate(name);
+    } else {
+        // Fallback: basic template without pattern builder
+        scenarioNameTemplate = `${name}_%%Group.router%%_%%MovementModel.rngSeed%%_%%Group.msgTtl%%`;
+    }
     content += `
 ## Scenario settings
-Scenario.name = ${name}_%%Group.router%%_%%MovementModel.rngSeed%%_%%Group.msgTtl%%
+Scenario.name = ${scenarioNameTemplate}
 
 Scenario.simulateConnections = ${document.getElementById("simulateConnections").checked ? "true" : "false"}
 Scenario.updateInterval = ${document.getElementById("updateInterval").value}
@@ -1882,7 +1917,12 @@ ${interfaceName}.transmitRange = ${transmitRange}
     const tagifyValue = JSON.parse(tagifyInput.value);
     const CommoNrouter = `[${tagifyValue.map(tag => tag.value).join("; ")}]`;
     // routerCount already computed above for batch mode detection
-    const CommoNbufferSize = document.getElementById("commonBufferSize").value;
+    let CommoNbufferSize = document.getElementById("commonBufferSize").value;
+    // Handle buffer size batch mode (wrap with brackets if semicolons present)
+    let bufferLen = (CommoNbufferSize.match(/;/g) || []).length + 1;
+    if (CommoNbufferSize.includes(";")) {
+        CommoNbufferSize = `[${CommoNbufferSize}]`;
+    }
     const commonRouteFile = document.getElementById("commonRouteFile");
     const CommoNwaitTime = document.getElementById("commonWaitTime").value;
 
@@ -2034,8 +2074,8 @@ Events${count}.prefix = ${row['prefix']}
     }
     let rngSeedLen = ((rngSeed.match(/;/g) || []).length) + 1;
 
-    // Calculate batch number
-    batchNum = routerCount * rngSeedLen * TTLLen;
+    // Calculate batch number (routers × seeds × TTLs × buffers)
+    batchNum = routerCount * rngSeedLen * TTLLen * bufferLen;
 
     content += `
 ## Movement model settings
@@ -2169,6 +2209,13 @@ GUI.EventLogPanel.nrofEvents = ${eventLogPanelNrofEvents}
 
     logStep('⏳ Saving settings and starting simulation...');
 
+    // Show stop button, disable run button
+    const runBtn = document.getElementById('runButton');
+    const stopBtn = document.getElementById('stopSimButton');
+    if (runBtn) runBtn.disabled = true;
+    if (stopBtn) stopBtn.style.display = 'block';
+
+    // Use fetch with streaming for SSE response from POST
     fetch("/api/run-one", {
         method: "POST",
         headers: {
@@ -2176,64 +2223,164 @@ GUI.EventLogPanel.nrofEvents = ${eventLogPanelNrofEvents}
         },
         body: JSON.stringify(payload),
     })
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.success) {
-                addDivider();
-                logSuccess('Pipeline completed successfully!');
-                addDivider();
+        .then((response) => {
+            // Check if response is SSE stream
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('text/event-stream')) {
+                // Handle SSE stream from POST response
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
 
-                logSuccess(`Settings saved: ${data.results.settings_file || settingsFilename}`);
-                if (data.results.configs_saved?.length) {
-                    logSuccess(`Configs saved: ${data.results.configs_saved.join(', ')}`);
-                }
-
-                if (data.results.simulation) {
-                    if (data.results.simulation.success) {
-                        logSuccess('Simulation: Completed');
-                    } else {
-                        logError('Simulation: Failed');
-                    }
-                    if (data.results.simulation.output) {
-                        addDivider();
-                        logInfo('📋 Simulation Output:');
-                        formatBackendOutput(data.results.simulation.output);
-                    }
-                }
-
-                if (data.results.post_processing?.length > 0) {
-                    addDivider();
-                    logStep('📊 Post-Processing Results:');
-                    data.results.post_processing.forEach(pp => {
-                        if (pp.success) {
-                            logSuccess(`${pp.script}: Completed`);
-                        } else {
-                            logError(`${pp.script}: Failed`);
+                function processStream() {
+                    reader.read().then(({ done, value }) => {
+                        if (done) {
+                            addDivider();
+                            showSaveStatus('✓ Stream ended', true);
+                            return;
                         }
-                        if (pp.output) {
-                            formatBackendOutput(pp.output);
+
+                        buffer += decoder.decode(value, { stream: true });
+
+                        // Process complete SSE messages
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const data = JSON.parse(line.slice(6));
+                                    handleStreamEvent(data);
+                                } catch (e) {
+                                    // Not valid JSON, ignore
+                                }
+                            }
                         }
+
+                        processStream(); // Continue reading
+                    }).catch((error) => {
+                        console.error('Stream error:', error);
+                        logError(`Stream error: ${error.message}`);
+                        showSaveStatus('✗ Stream error', false);
                     });
                 }
 
-                addDivider();
-                logSuccess('🎉 Pipeline finished!');
-                showSaveStatus('✓ Pipeline complete', true);
+                processStream();
             } else {
-                addDivider();
-                logError(`Pipeline error: ${data.message}`);
-                if (data.output) {
-                    formatBackendOutput(data.output);
-                }
-                console.error('Pipeline error:', data);
-                showSaveStatus('✗ Pipeline failed', false);
+                // Handle regular JSON response (error case)
+                return response.json().then((data) => {
+                    if (!data.success) {
+                        addDivider();
+                        logError(`Pipeline error: ${data.message}`);
+                        showSaveStatus('✗ Pipeline failed', false);
+                    }
+                });
             }
         })
         .catch((error) => {
             console.error("Error:", error);
             logError(`Network error: ${error.message}`);
             showSaveStatus('✗ Pipeline error', false);
+            resetProcessButtons();
         });
+}
+
+/**
+ * Handle a streaming SSE event from the simulation
+ */
+function handleStreamEvent(data) {
+    switch (data.type) {
+        case 'info':
+            logInfo(data.message);
+            break;
+        case 'step':
+            logStep(data.message);
+            break;
+        case 'log':
+            // Map backend level to frontend function
+            switch (data.level) {
+                case 'error':
+                    logError(data.message);
+                    break;
+                case 'warning':
+                    logWarning(data.message);
+                    break;
+                case 'success':
+                    logSuccess(data.message);
+                    break;
+                case 'step':
+                    logStep(data.message);
+                    break;
+                default:
+                    logOutput(data.message);
+            }
+            break;
+        case 'complete':
+            addDivider();
+            if (data.success) {
+                logSuccess(`🎉 ${data.message}`);
+                showSaveStatus('✓ Simulation complete', true);
+            } else {
+                logError(`✗ ${data.message}`);
+                showSaveStatus('✗ Simulation failed', false);
+            }
+            break;
+        case 'error':
+            logError(data.message);
+            break;
+        case 'end':
+            // Stream ended — reset buttons
+            resetProcessButtons();
+            break;
+    }
+}
+
+// ============================================================
+// PROCESS TERMINATION
+// ============================================================
+
+/**
+ * Terminate a running simulation or post-processing process
+ * @param {string} target - 'simulation', 'post_processing', or 'all'
+ */
+function terminateProcess(target = 'all') {
+    logWarning(`Terminating ${target === 'all' ? 'all processes' : target}...`);
+
+    fetch('/api/terminate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target: target })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                logWarning(`⛔ ${data.message}`);
+                showSaveStatus('Process terminated', false);
+            } else {
+                logError(`Terminate failed: ${data.message}`);
+            }
+            // Reset buttons
+            resetProcessButtons();
+        })
+        .catch(error => {
+            logError(`Terminate error: ${error.message}`);
+            resetProcessButtons();
+        });
+}
+
+/**
+ * Reset run/stop button states after process ends
+ */
+function resetProcessButtons() {
+    const runBtn = document.getElementById('runButton');
+    const stopSimBtn = document.getElementById('stopSimButton');
+    const runAllPPBtn = document.getElementById('runAllPPButton');
+    const stopPPBtn = document.getElementById('stopPPButton');
+
+    if (runBtn) runBtn.disabled = false;
+    if (stopSimBtn) stopSimBtn.style.display = 'none';
+    if (runAllPPBtn) runAllPPBtn.disabled = false;
+    if (stopPPBtn) stopPPBtn.style.display = 'none';
 }
 
 // ============================================================
@@ -2244,8 +2391,8 @@ GUI.EventLogPanel.nrofEvents = ${eventLogPanelNrofEvents}
 let metricsIncludeTagify, metricsIgnoreTagify, enabledPlotsTagify, predictorsTagify, enabledModelsTagify;
 let reportTypesTagify, batchIgnoreFieldsTagify, regressionExcludeTagify, regressionTargetTagify;
 
-// Available options for Tagify dropdowns
-const AVAILABLE_METRICS = [
+// Available options for Tagify dropdowns (defaults, overwritten by gui_options.json)
+let AVAILABLE_METRICS = [
     "delivery_prob", "latency_avg", "latency_med", "overhead_ratio",
     "hopcount_avg", "hopcount_med", "buffertime_avg", "buffertime_med",
     "rtt_avg", "rtt_med", "sim_time", "created", "started", "relayed",
@@ -2253,25 +2400,133 @@ const AVAILABLE_METRICS = [
     "oppo_cahce_hit", "static_cache_hit", "drop_pit", "duplicated_query"
 ];
 
-const AVAILABLE_PLOTS = [
+let AVAILABLE_PLOTS = [
     "line_plots", "3d_surface", "violin_plots", "heatmaps", "pairplot", "export_csv"
 ];
 
-const AVAILABLE_MODELS = [
+let AVAILABLE_MODELS = [
     "Linear Regression", "Ridge Regression", "Lasso Regression",
     "Decision Tree", "Random Forest", "Gradient Boosting", "KNN"
 ];
 
-const AVAILABLE_PREDICTORS = [
+let AVAILABLE_PREDICTORS = [
     "BufferSize", "TTL", "overhead_ratio", "hopcount_avg", "latency_avg",
     "buffertime_avg", "rtt_avg", "created", "delivered", "relayed",
     "oppo_cahce_hit", "static_cache_hit", "drop_pit", "duplicated_query"
 ];
 
-const AVAILABLE_REPORT_TYPES = [
+let AVAILABLE_REPORT_TYPES = [
     "MessageStatsReport", "CreatedMessagesReport",
     "DeliveredMessagesReport", "BufferOccupancyReport"
 ];
+
+// ============================================================
+// CENTRALIZED CONFIG LOADER
+// Load GUI options from config/gui_options.json via API
+// ============================================================
+
+/**
+ * Populate a <select> element with options from an array.
+ * Preserves the current selection if it exists in the new list.
+ */
+function populateSelectFromConfig(selectId, optionValues) {
+    const select = document.getElementById(selectId);
+    if (!select || !optionValues || optionValues.length === 0) return;
+
+    const currentValue = select.value;
+    select.innerHTML = '';
+
+    optionValues.forEach(value => {
+        const option = document.createElement('option');
+        option.value = value;
+        // Create human-readable label: insert spaces before capitals
+        option.textContent = value.replace(/([A-Z])/g, ' $1').trim();
+        select.appendChild(option);
+    });
+
+    // Restore previous selection if still valid
+    if (currentValue && optionValues.includes(currentValue)) {
+        select.value = currentValue;
+    }
+}
+
+/**
+ * Load centralized GUI options from the backend and update all
+ * dropdowns, Tagify whitelists, and default data.
+ * Falls back gracefully to hardcoded defaults on error.
+ */
+async function loadGUIOptions() {
+    try {
+        const response = await fetch('/api/gui-options');
+        if (!response.ok) {
+            console.warn('Could not load gui_options.json, using defaults');
+            return;
+        }
+        const options = await response.json();
+        window.guiOptions = options;
+
+        // --- Update AVAILABLE_* arrays ---
+        if (options.metrics && options.metrics.length > 0) {
+            AVAILABLE_METRICS = options.metrics;
+        }
+        if (options.plots && options.plots.length > 0) {
+            AVAILABLE_PLOTS = options.plots;
+        }
+        if (options.models && options.models.length > 0) {
+            AVAILABLE_MODELS = options.models;
+        }
+        if (options.predictors && options.predictors.length > 0) {
+            AVAILABLE_PREDICTORS = options.predictors;
+        }
+        if (options.report_types && options.report_types.length > 0) {
+            AVAILABLE_REPORT_TYPES = options.report_types;
+        }
+
+        // --- Update Tagify whitelists if already initialized ---
+        if (metricsIncludeTagify) metricsIncludeTagify.settings.whitelist = AVAILABLE_METRICS;
+        if (metricsIgnoreTagify) metricsIgnoreTagify.settings.whitelist = AVAILABLE_METRICS;
+        if (enabledPlotsTagify) enabledPlotsTagify.settings.whitelist = AVAILABLE_PLOTS;
+        if (enabledModelsTagify) enabledModelsTagify.settings.whitelist = AVAILABLE_MODELS;
+        if (predictorsTagify) predictorsTagify.settings.whitelist = AVAILABLE_PREDICTORS;
+        if (reportTypesTagify) reportTypesTagify.settings.whitelist = AVAILABLE_REPORT_TYPES;
+        if (regressionTargetTagify) regressionTargetTagify.settings.whitelist = AVAILABLE_METRICS;
+
+        // --- Populate <select> dropdowns ---
+        if (options.routers && options.routers.length > 0) {
+            // Router select in group editor
+            populateSelectFromConfig('router', options.routers);
+            // Router Tagify whitelist (common router input)
+            if (window.routerTagify) {
+                window.routerTagify.settings.whitelist = options.routers;
+            }
+        }
+        if (options.movement_models && options.movement_models.length > 0) {
+            populateSelectFromConfig('commonMovementModel', options.movement_models);
+            populateSelectFromConfig('Movement', options.movement_models);
+        }
+
+        // --- Update default group settings ---
+        if (options.default_groups && options.default_groups.length > 0) {
+            // Only update if group table hasn't been modified by user yet
+            const currentTable = document.getElementById('groupSettingsBody');
+            if (currentTable && currentTable.rows.length === 0) {
+                groupSettings = options.default_groups.map(g => ({
+                    ...g,
+                    actions: 'Edit/Delete'
+                }));
+            }
+        }
+
+        // --- Update Pattern Builder ONE placeholders ---
+        if (options.one_placeholders && window.patternBuilder) {
+            window.patternBuilder._onePlaceholders = options.one_placeholders;
+        }
+
+        console.log('✓ GUI options loaded from config/gui_options.json');
+    } catch (error) {
+        console.warn('Failed to load GUI options:', error.message);
+    }
+}
 
 // Initialize Tagify instances for post-processing inputs
 function initPostProcessingTagify() {
@@ -2579,7 +2834,7 @@ function initializeGroupByTagify(inputElement) {
 
     // Initialize Tagify if not already initialized
     if (!inputElement.tagify) {
-        new Tagify(inputElement, {
+        const tagify = new Tagify(inputElement, {
             whitelist: patternNames,
             enforceWhitelist: true,
             dropdown: {
@@ -2589,6 +2844,8 @@ function initializeGroupByTagify(inputElement) {
             },
             placeholder: 'Select pattern names from builder...'
         });
+        // Store the Tagify instance on the element for later access
+        inputElement.tagify = tagify;
     }
 }
 
@@ -2915,20 +3172,24 @@ function saveAnalysisConfig() {
         });
 }
 
-// Batch Config
+// Batch Config (uses averager config file)
 function loadBatchConfig() {
-    fetch('/api/config/batch')
+    fetch('/api/config/averager')
         .then(response => response.json())
         .then(config => {
             if (config.error) {
                 console.error('Error loading batch config:', config.error);
                 return;
             }
-            document.getElementById('batchFolder').value = config.folder || '';
-            document.getElementById('batchExtension').value = config.file_filter?.extension || '.txt';
-            document.getElementById('batchDelimiter').value = config.filename_pattern?.delimiter || '_';
-            document.getElementById('batchDataSeparator').value = config.data_separator || ':';
-            document.getElementById('batchPrecision').value = config.output?.precision || 4;
+            const batchFolderEl = document.getElementById('batchFolder');
+            const batchExtensionEl = document.getElementById('batchExtension');
+            const batchDataSeparatorEl = document.getElementById('batchDataSeparator');
+            const batchPrecisionEl = document.getElementById('batchPrecision');
+
+            if (batchFolderEl) batchFolderEl.value = config.folder || '';
+            if (batchExtensionEl) batchExtensionEl.value = config.file_filter?.extension || '.txt';
+            if (batchDataSeparatorEl) batchDataSeparatorEl.value = config.data_separator || ':';
+            if (batchPrecisionEl) batchPrecisionEl.value = config.output?.precision || 4;
 
             // Ignore fields using Tagify
             if (batchIgnoreFieldsTagify && config.ignore_fields) {
@@ -2936,11 +3197,35 @@ function loadBatchConfig() {
                 batchIgnoreFieldsTagify.addTags(config.ignore_fields);
             }
 
-            // Advanced Settings - Filename Pattern Components (Dynamic Table)
+            // Advanced Settings - Filename Pattern Components
+            // Update both the old table AND the new Pattern Builder
+            const components = config.filename_pattern?.components || {};
+
+            // Update Pattern Builder if available
+            if (window.patternBuilder) {
+                // Sort by position and extract names
+                const sortedComponents = Object.entries(components)
+                    .sort((a, b) => a[1] - b[1])
+                    .map(([name, pos]) => name);
+
+                if (sortedComponents.length > 0) {
+                    window.patternBuilder.patternNames = sortedComponents;
+                    window.patternBuilder.delimiter = config.filename_pattern?.delimiter || '_';
+                    window.patternBuilder.renderPatternItems();
+                    window.patternBuilder.updatePreview();
+
+                    // Update delimiter dropdown
+                    const delimiterSelect = document.getElementById('patternDelimiter');
+                    if (delimiterSelect) {
+                        delimiterSelect.value = window.patternBuilder.delimiter;
+                    }
+                }
+            }
+
+            // Also update the legacy components table
             const componentsBody = document.getElementById('batchComponentsBody');
             if (componentsBody) {
                 componentsBody.innerHTML = '';
-                const components = config.filename_pattern?.components || {};
                 Object.entries(components).forEach(([name, position]) => {
                     addBatchComponent(name, position);
                 });
@@ -3287,8 +3572,37 @@ async function runPostProcessingStep(step) {
     clearConsole();
 
     logStep(`Starting ${step} post-processing...`);
-    logInfo(`Endpoint: /api/run-${step}`);
+
+    // IMPORTANT: Save the config BEFORE running the step
+    logInfo('Saving configuration...');
+    try {
+        let configData = null;
+        if (step === 'averager') {
+            configData = collectAveragerConfig();
+        } else if (step === 'analysis') {
+            configData = collectAnalysisConfig();
+        } else if (step === 'regression') {
+            configData = collectRegressionConfig();
+        }
+
+        if (configData) {
+            const saveResponse = await fetch('/api/save-config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ config: step, changes: configData })
+            });
+            if (saveResponse.ok) {
+                logSuccess(`${step} config saved.`);
+            } else {
+                logWarning(`Could not save ${step} config, using existing settings.`);
+            }
+        }
+    } catch (e) {
+        logWarning(`Config save error: ${e.message}, continuing with existing settings.`);
+    }
+
     addDivider();
+    logInfo(`Endpoint: /api/run-${step}`);
 
     const endpoints = {
         'averager': '/api/run-averager',
